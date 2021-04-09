@@ -7,6 +7,6 @@ if __name__ == '__main__':
     run_configuration()
 
     logging.info('Launched main.py')
-    run_dataprep(embedding_type="glove_twitter", embedding_version="glove.twitter.27B.25d.txt")
+    run_dataprep(embedding_type="glove_twitter")
 
 
