@@ -124,7 +124,6 @@ dmypy.json
 # rm -rf .git
 .idea/
 .DS_Store
-*.log
 /data/
 /logs/
 

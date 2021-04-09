@@ -9,5 +9,5 @@ EMBEDDING_FOLDER = os.sep.join([DATA_FOLDER, 'embeddings'])
 LOGGING_PATH = os.sep.join([os.environ['PWD'], 'logs'])
 
 GLOVE_TWITTER = "http://nlp.stanford.edu/data/glove.twitter.27B.zip"
-
+COMMMON_CRAWL_840B = "http://nlp.stanford.edu/data/glove.840B.300d.zip"
 
