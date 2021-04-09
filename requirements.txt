@@ -1,0 +1,17 @@
+matplotlib
+mwparserfromhell
+nltk
+pandas
+numpy
+progressbar2
+pywikibot
+pyyaml
+requests
+seaborn
+sidetable
+sparqlwrapper
+termplotlib
+torch
+wiki-dump-reader
+wordcloud
+scipy
