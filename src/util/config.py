@@ -10,6 +10,7 @@ from datetime import datetime
 import os
 from os.path import join
 
+
 def run_configuration():
     """Runs basic configuration for the workflow.
     """

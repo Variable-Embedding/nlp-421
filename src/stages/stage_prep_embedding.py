@@ -4,6 +4,10 @@ from src.util.constants import *
 
 
 def stage_prep_embedding(embedding_type):
+    """
+    :param embedding_type: string, a keyname for a type of GloVe embedding to download and prep
+    :return: None, download and save GloVe embeddings to disk.
+    """
     if embedding_type == "glove_twitter":
         logging.info('Data Prep - Embedding is GloVe Twitter.')
         url = GLOVE_TWITTER
@@ -20,6 +24,8 @@ def stage_prep_embedding(embedding_type):
         has_embedding = get_embeddings(url, unzip_path=embedding_folder)
     else:
         has_embedding = False
+
+    #TODO: something else with emebddings?
 
 
 

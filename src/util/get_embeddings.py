@@ -9,6 +9,13 @@ import numpy as np
 
 
 def get_embeddings(url, unzip_path):
+    """
+    Get and process GloVe embeddings.
+
+    :param url: The target URL, see constants.py for urls to GloVe downloads.
+    :param unzip_path: The full path to unzip GloVe downloads to.
+    :return: bool, return True if everything runs
+    """
 
     directory = os.listdir(unzip_path)
 
@@ -38,6 +45,12 @@ def get_embeddings(url, unzip_path):
 
 
 def write_pickle(directory, unzip_path):
+    """
+    Write dictionaries to pickled files.
+    :param directory: A dictionary of word embeddings.
+    :param unzip_path: Full path to file locations.
+    :return: None, writes data to disk.
+    """
     for text_file in directory:
         text_file_path = os.sep.join([unzip_path, text_file])
         embedding_dict = parse_embedding_txt(text_file_path)
@@ -93,6 +106,11 @@ def parse_embedding_txt(embedding_file_path):
 
 
 def read_line(line):
+    """
+    Read lines in a text file from embeddings.
+    :param line: Each line of a text open object.
+    :return: 2-tuple of word (string) and numpy array (vector).
+    """
     values = line.split()
     word = values[0]
     vector = np.asarray(values[1:], "float32")
