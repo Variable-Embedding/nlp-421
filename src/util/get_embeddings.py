@@ -13,7 +13,7 @@ import numpy as np
 #     """
 #     Consume pre-trained embedding with vocab of target corpus, return embedding layer for training.
 #
-#     :returns : an embedding space that has words from the target vocabulary, if they exists, or
+#     :returns : an embedding space t hat has words from the target vocabulary, if they exists, or
 #     initialize random embedding for new words from the target corpus
 #
 #     source: https://medium.com/@martinpella/how-to-use-pre-trained-word-embeddings-in-pytorch-71ca59249f76
@@ -73,6 +73,8 @@ def download_embeddings(url, unzip_path):
         logging.info(f'Current files {directory}')
         logging.info(f'Skipping download from URL: {url} - to force download, delete or rename files in this directory.')
 
+        write_pickle(directory, unzip_path)
+
     else:
         logging.info(f'Starting download from {url}.')
         r = requests.get(url)
@@ -81,12 +83,7 @@ def download_embeddings(url, unzip_path):
         directory = os.listdir(unzip_path)
         logging.info(f'Downloaded {directory} to {unzip_path}')
 
-        if any([".pickle" in i for i in directory]):
-            logging.info(f'Pickle files detected, skipping conversion from .txt to .pickle format.')
-            pass
-        else:
-            logging.info(f'Converting .txt embedding files to .pickle objects for faster IO.')
-            write_pickle(directory, unzip_path)
+        write_pickle(directory, unzip_path)
 
     logging.info('download_embeddings() Complete')
 
@@ -95,26 +92,33 @@ def download_embeddings(url, unzip_path):
 
 def write_pickle(directory, unzip_path):
     """
-    Write dictionaries to pickled files.
+    Write dictionaries to pickled files if the provided directory does not already have pickle files.
 
     :param directory: A dictionary of word embeddings.
     :param unzip_path: Full path to file locations.
     :return: None, writes data to disk.
     """
-    for text_file in directory:
-        text_file_path = os.sep.join([unzip_path, text_file])
-        embedding_dict = parse_embedding_txt(text_file_path)
 
-        pickle_file = f'{Path(text_file).stem}.pickle'
-        pickle_file_path = os.sep.join([unzip_path, pickle_file])
+    if any([".pickle" in i for i in directory]):
+        logging.info(f'Pickle files detected, skipping conversion from .txt to .pickle format.')
 
-        f = open(pickle_file_path, "wb")
-        pickle.dump(embedding_dict, f, protocol=2)
-        f.close()
-        # test read pickle
-        parse_embedding_pickle(pickle_file_path)
+    else:
+        logging.info(f'Converting .txt embedding files to .pickle objects for faster IO.')
 
-        logging.info(f'Wrote embedding pickle to {pickle_file_path}.')
+        for text_file in directory:
+            text_file_path = os.sep.join([unzip_path, text_file])
+            embedding_dict = parse_embedding_txt(text_file_path)
+
+            pickle_file = f'{Path(text_file).stem}.pickle'
+            pickle_file_path = os.sep.join([unzip_path, pickle_file])
+
+            f = open(pickle_file_path, "wb")
+            pickle.dump(embedding_dict, f, protocol=2)
+            f.close()
+            # test read pickle
+            parse_embedding_pickle(pickle_file_path)
+
+            logging.info(f'Wrote embedding pickle to {pickle_file_path}.')
 
 
 def parse_embedding_pickle(embedding_file_path):
@@ -124,6 +128,7 @@ def parse_embedding_pickle(embedding_file_path):
     :param embedding_file_path: string, full path to the embedding txt file
     :return: a dictionary of embeddings k: word (string), v: embedding vector of float32s (numpy array)
     """
+    logging.info(f'Reading embedding file from {embedding_file_path}.')
     if ".pickle" in embedding_file_path:
         start_time = time.time()
 
@@ -166,8 +171,44 @@ def read_line(line):
     :param line: Each line of a text open object.
     :return: 2-tuple of word (string) and numpy array (vector).
     """
+
     values = line.split()
+    # the first element is assumed to be the word
     word = values[0]
-    vector = np.asarray(values[1:], "float32")
+
+    # catch cases where first n strings are repeating as the word
+    try:
+        # the rest of list is usually the vector but sometimes it is not
+        vector = np.asarray(values[1:], "float32")
+    except ValueError:
+        word = return_repeating_word(values)
+        vector = np.asarray(values, "float32")
 
     return tuple((word, vector))
+
+
+def return_repeating_word(values):
+    """
+    A helper function for read_line(). Return repeating chars as a single word.
+
+    :param values: values, a line of embedding text data
+    :return: A string of repeating characters. Manipulate values input with pop(0)
+    """
+    word = []
+    first_char = values.pop(0)
+    word.append(first_char)
+
+    while values:
+        curr_char = values.pop(0)
+        if curr_char == first_char:
+            word.append(curr_char)
+        else:
+            break
+
+    word = ''.join(map(str, word))
+
+    return word
+
+
+
+
