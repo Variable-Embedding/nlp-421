@@ -7,6 +7,8 @@ if __name__ == '__main__':
     run_configuration()
 
     logging.info('Launched main.py')
-    run_dataprep(embedding_type="glove_twitter", target_glove="glove.twitter.27B.200d.pickle")
+    embeddings = run_dataprep(embedding_type="glove_twitter", target_glove="glove.twitter.27B.200d.pickle")
+
+    #TODO: consume embeddings into a nn
 
 

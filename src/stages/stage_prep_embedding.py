@@ -1,5 +1,5 @@
 import logging
-from src.util.get_embeddings import get_embeddings, parse_embedding_pickle
+from src.util.get_embeddings import download_embeddings, parse_embedding_pickle, get_embeddings
 from src.util.constants import *
 
 
@@ -22,31 +22,19 @@ def stage_prep_embedding(embedding_type, target_glove=None):
         url = None
         embedding_folder = None
 
-    # has_embedding: bool, if True, get_embeddings worked
+    # has_embedding: bool, if True, download_embeddings worked
     if url is not None:
-        has_embedding = get_embeddings(url, unzip_path=embedding_folder)
+        has_embedding = download_embeddings(url, unzip_path=embedding_folder)
     else:
         has_embedding = False
 
     if has_embedding and target_glove:
         glove_target = os.sep.join([embedding_folder, target_glove])
-        embeddings = parse_embedding_pickle(glove_target)
+        glove_embeddings = parse_embedding_pickle(glove_target)
+        embeddings = get_embeddings(glove_embeddings)
+        return embeddings
 
-        #TODO: configure embedding objects to work with nn
-        words = []
-        idx = 0
-        word2idx = {}
-        idx2word = {}
-        vectors = []
 
-        for word, vector in embeddings.items():
-            words.append(word)
-            word2idx[word] = idx
-            idx2word[idx] = word
-            vectors.append(vector)
-            idx += 1
-
-        #TODO: Integerate embedding objects with LSTM RNN
 
 
 

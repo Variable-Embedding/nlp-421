@@ -8,7 +8,56 @@ import time
 import numpy as np
 
 
-def get_embeddings(url, unzip_path):
+# TODO: Complete this function
+# def prep_nn_embeddings(word2idx, target_vocab):
+#     """
+#     Consume pre-trained embedding with vocab of target corpus, return embedding layer for training.
+#
+#     :returns : an embedding space that has words from the target vocabulary, if they exists, or
+#     initialize random embedding for new words from the target corpus
+#
+#     source: https://medium.com/@martinpella/how-to-use-pre-trained-word-embeddings-in-pytorch-71ca59249f76
+#     """
+#     matrix_len = len(target_vocab)
+#     weights_matrix = np.zeros((matrix_len, 50))
+#     words_found = 0
+#
+#     for i, word in enumerate(target_vocab):
+#         try:
+#             weights_matrix[i] = word2idx[word]
+#             words_found += 1
+#         except KeyError:
+#             weights_matrix[i] = np.random.normal(scale=0.6, size=(emb_dim,))
+
+def get_embeddings(glove_embeddings):
+    """
+    Return pre-trained embedding data to the neural network pipeline.
+
+    :param glove_embeddings: A dict of GloVe embeddings
+    :return: Return a 3-Tuple of GloVe embeddings :
+             word2idx, dict, {word:int}
+             idx2word, dict, {int:word}
+             vectors, list, [numpy array]
+    """
+    # Initialize data structs
+    words = []
+    idx = 0
+    word2idx = {}
+    idx2word = {}
+    # TODO: vectors will need to become array/torch object.
+    vectors = []
+
+    for word, vector in glove_embeddings.items():
+        words.append(word)
+        word2idx[word] = idx
+        idx2word[idx] = word
+        vectors.append(vector)
+        idx += 1
+
+    return word2idx, idx2word, vectors
+
+
+def download_embeddings(url, unzip_path):
     """
     Get and process GloVe embeddings.
 
@@ -39,7 +88,7 @@ def get_embeddings(url, unzip_path):
             logging.info(f'Converting .txt embedding files to .pickle objects for faster IO.')
             write_pickle(directory, unzip_path)
 
-    logging.info('get_embeddings() Complete')
+    logging.info('download_embeddings() Complete')
 
     return True
 
@@ -47,6 +96,7 @@ def get_embeddings(url, unzip_path):
 def write_pickle(directory, unzip_path):
     """
     Write dictionaries to pickled files.
+
     :param directory: A dictionary of word embeddings.
     :param unzip_path: Full path to file locations.
     :return: None, writes data to disk.
@@ -69,6 +119,8 @@ def write_pickle(directory, unzip_path):
 
 def parse_embedding_pickle(embedding_file_path):
     """
+    Read pickled embedding files from disk.
+
     :param embedding_file_path: string, full path to the embedding txt file
     :return: a dictionary of embeddings k: word (string), v: embedding vector of float32s (numpy array)
     """
@@ -88,6 +140,8 @@ def parse_embedding_pickle(embedding_file_path):
 
 def parse_embedding_txt(embedding_file_path):
     """
+    Read text embedding files from disk.
+
     :param embedding_file_path: string, full path to the embedding txt file
     :return: a dictionary of embeddings k: word (string), v: embedding vector of float32s (numpy array)
     """
@@ -108,6 +162,7 @@ def parse_embedding_txt(embedding_file_path):
 def read_line(line):
     """
     Read lines in a text file from embeddings.
+
     :param line: Each line of a text open object.
     :return: 2-tuple of word (string) and numpy array (vector).
     """
