@@ -6,7 +6,10 @@ from src.util.constants import *
 import pickle
 import time
 import numpy as np
-
+import gc
+from torchnlp.word_to_vector import GloVe
+import mmap
+from tqdm import tqdm
 
 # TODO: Complete this function
 # def prep_nn_embeddings(word2idx, target_vocab):
@@ -29,6 +32,7 @@ import numpy as np
 #         except KeyError:
 #             weights_matrix[i] = np.random.normal(scale=0.6, size=(emb_dim,))
 
+
 def get_embeddings(glove_embeddings):
     """
     Return pre-trained embedding data to the neural network pipeline.
@@ -44,7 +48,7 @@ def get_embeddings(glove_embeddings):
     idx = 0
     word2idx = {}
     idx2word = {}
-    # TODO: vectors will need to become array/torch object.
+    # TODO: vectors will need to become array/torch object of array/torch objects.
     vectors = []
 
     for word, vector in glove_embeddings.items():
@@ -55,6 +59,41 @@ def get_embeddings(glove_embeddings):
         idx += 1
 
     return word2idx, idx2word, vectors
+
+
+def get_torch_glove(torch_glove_type="twitter.27B"):
+    """
+    A helper function to user torchnlp built-in glove getter.
+
+    :param torch_glove_type: a string, name of GloVe embedding
+    :return: bool, whether the get operation workd.
+    """
+    logging.info(f'Downloading GloVe vectors from TorchNLP for {torch_glove_type}')
+    # set path for download (cache in torchnlp)
+    period = "."
+    underscore = "_"
+    if period in torch_glove_type:
+        torch_glove_path = torch_glove_type.replace(period, underscore)
+    else:
+        torch_glove_path = torch_glove_type
+
+    torch_glove_folder = os.sep.join([EMBEDDING_FOLDER, f'torch_glove_{torch_glove_path}'])
+    # run torchnlp method for GloVe download
+
+    if os.path.exists(torch_glove_folder):
+        directories = os.listdir(torch_glove_folder)
+    else:
+        GloVe(name=torch_glove_type, cache=torch_glove_folder)
+        directories = os.listdir(torch_glove_folder)
+
+    if len(directories) > 0:
+        directories = [x for x in directories if not x.endswith('.pt') and not x.endswith('.zip')]
+        write_pickle(directories, torch_glove_folder)
+
+    if directories:
+        return True
+    else:
+        return False
 
 
 def download_embeddings(url, unzip_path):
@@ -77,6 +116,7 @@ def download_embeddings(url, unzip_path):
 
     else:
         logging.info(f'Starting download from {url}.')
+        # TODO: Add progress bar here for long download operations.
         r = requests.get(url)
         z = zipfile.ZipFile(io.BytesIO(r.content))
         z.extractall(unzip_path)
@@ -129,6 +169,7 @@ def parse_embedding_pickle(embedding_file_path):
     :return: a dictionary of embeddings k: word (string), v: embedding vector of float32s (numpy array)
     """
     logging.info(f'Reading embedding file from {embedding_file_path}.')
+
     if ".pickle" in embedding_file_path:
         start_time = time.time()
 
@@ -155,13 +196,31 @@ def parse_embedding_txt(embedding_file_path):
 
     start_time = time.time()
     with open(embedding_file_path, 'r', encoding="utf-8") as f:
-        for line in f:
+        # for line in f:
+        for line in tqdm(f, total=get_num_lines(embedding_file_path), desc='Opening Text File'):
             word, vector = read_line(line)
             embedding_dict.update({word: vector})
     end_time = time.time()
     logging.info(f'TEXT Read Time is {end_time-start_time}')
 
     return embedding_dict
+
+
+def get_num_lines(file_path):
+    """
+    A helper function to count number of lines in a given text file.
+    :param file_path: full path to some .txt file.
+    :return: integer, count of lines in a .txt file.
+
+    reference: https://blog.nelsonliu.me/2016/07/30/progress-bars-for-python-file-reading-with-tqdm/
+    """
+
+    fp = open(file_path, "r+")
+    buf = mmap.mmap(fp.fileno(), 0)
+    lines = 0
+    while buf.readline():
+        lines += 1
+    return lines
 
 
 def read_line(line):

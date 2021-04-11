@@ -15,3 +15,6 @@ torch
 wiki-dump-reader
 wordcloud
 scipy
+bs4
+pytorch-nlp
+

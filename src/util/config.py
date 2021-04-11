@@ -28,13 +28,8 @@ def run_configuration():
     logging.basicConfig(filename=filename, format=format, level=logging.INFO)
     logging.getLogger().addHandler(stream_handler)
 
-    if not os.path.exists(DATA_FOLDER):
-        os.makedirs(DATA_FOLDER)
-
-    if not os.path.exists(EMBEDDING_FOLDER):
-        os.makedirs(EMBEDDING_FOLDER)
-
-    if not os.path.exists(LOGGING_PATH):
-        os.makedirs(LOGGING_PATH)
+    for folder in ALL_FOLDERS:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
     logger.info("Logging configurations finished.")
