@@ -108,7 +108,7 @@ def get_embeddings(glove_embeddings):
     return word2idx, idx2word, vectors
 
 
-def get_torch_glove(torch_glove_type="twitter.27B"):
+def get_torch_glove(torch_glove_type):
     """
     A helper function to user torchnlp built-in glove getter.
 
@@ -126,10 +126,12 @@ def get_torch_glove(torch_glove_type="twitter.27B"):
 
     torch_glove_folder = os.sep.join([EMBEDDING_FOLDER, f'torch_glove_{torch_glove_path}'])
     # run torchnlp method for GloVe download
-
+    directories = []
+    
     if os.path.exists(torch_glove_folder):
         directories = os.listdir(torch_glove_folder)
-    else:
+
+    if len(directories) == 0:
         GloVe(name=torch_glove_type, cache=torch_glove_folder)
         directories = os.listdir(torch_glove_folder)
 
