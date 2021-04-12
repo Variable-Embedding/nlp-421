@@ -1,3 +1,15 @@
+# nlp-421
+
+An exploratory project to get and process GloVe embeddings for use in a NLP neural network. 
+
+## Usage
+
+* Run main.py
+
+```terminal
+python main.py
+```
+
 ## Resources
 
 * GloVe: [https://nlp.stanford.edu/projects/glove/](https://nlp.stanford.edu/projects/glove/)
