@@ -14,6 +14,10 @@ from os.path import join
 def run_configuration():
     """Runs basic configuration for the workflow.
     """
+    for folder in ALL_FOLDERS:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
     logger = logging.getLogger("pipeline").getChild("configuration")
     format = "%(asctime)s:%(name)s:%(levelname)s:%(message)s"
 
@@ -28,8 +32,6 @@ def run_configuration():
     logging.basicConfig(filename=filename, format=format, level=logging.INFO)
     logging.getLogger().addHandler(stream_handler)
 
-    for folder in ALL_FOLDERS:
-        if not os.path.exists(folder):
-            os.makedirs(folder)
+
 
     logger.info("Logging configurations finished.")
