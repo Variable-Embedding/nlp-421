@@ -11,26 +11,37 @@ from torchnlp.word_to_vector import GloVe
 import mmap
 from tqdm import tqdm
 
-# TODO: Complete this function
-# def prep_nn_embeddings(word2idx, target_vocab):
-#     """
-#     Consume pre-trained embedding with vocab of target corpus, return embedding layer for training.
-#
-#     :returns : an embedding space t hat has words from the target vocabulary, if they exists, or
-#     initialize random embedding for new words from the target corpus
-#
-#     source: https://medium.com/@martinpella/how-to-use-pre-trained-word-embeddings-in-pytorch-71ca59249f76
-#     """
-#     matrix_len = len(target_vocab)
-#     weights_matrix = np.zeros((matrix_len, 50))
-#     words_found = 0
-#
-#     for i, word in enumerate(target_vocab):
-#         try:
-#             weights_matrix[i] = word2idx[word]
-#             words_found += 1
-#         except KeyError:
-#             weights_matrix[i] = np.random.normal(scale=0.6, size=(emb_dim,))
+
+def prep_nn_embeddings(word2idx, vectors, target_vocab, embedding_dim):
+    """
+    Consume pre-trained embedding with vocab of target corpus, return embedding layer for training.
+
+    :returns : an embedding space t hat has words from the target vocabulary, if they exist, or
+    initialize random embedding for new words from the target corpus
+
+    source: https://medium.com/@martinpella/how-to-use-pre-trained-word-embeddings-in-pytorch-71ca59249f76
+    """
+    matrix_len = len(target_vocab)
+    vectors_new = np.zeros((matrix_len, embedding_dim))
+    words_found = 0
+    word2idx_new = {}
+    idx2word_new = {}
+
+    for i, word in enumerate(target_vocab):
+        try:
+            vectors_new[i] = vectors[word2idx[word]]
+            words_found += 1
+        except KeyError:
+            vectors_new[i] = np.random.normal(scale=0.6, size=(embedding_dim,))
+
+        word2idx_new.update({word: i})
+        idx2word_new.update({i: word})
+
+    logging.info('Out of {} total words, found {} words in the pre-trained model,'
+                 ' the remaining words initialized randomly.'.format(matrix_len, words_found))
+    logging.info('Returning {} vocabulary embeddings from pre-trained model.'.format(len(vectors_new)))
+
+    return word2idx_new, idx2word_new, vectors_new
 
 
 def get_embeddings(glove_embeddings):
@@ -115,7 +126,7 @@ def download_embeddings(url, unzip_path):
         write_pickle(directory, unzip_path)
 
     else:
-        logging.info(f'Starting download from {url}.')
+        logging.info(f'Starting download from {url}. This may take a while.')
         # TODO: Add progress bar here for long download operations.
         r = requests.get(url)
         z = zipfile.ZipFile(io.BytesIO(r.content))
