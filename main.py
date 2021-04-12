@@ -11,12 +11,12 @@ if __name__ == '__main__':
     logging.info('Launched main.py')
 
     # our custom functions to download and prep glove
-    # embeddings = run_dataprep(embedding_type="glove_common_crawl")
+    embeddings = run_dataprep(embedding_type="glove_common_crawl")
 
     ### TESTING OTHER TYPES OF EMBEDDINGS HERE:
 
     # the same thing as above but with torchnlp taking care of the download
-    embeddings = run_dataprep(embedding_type="840B")
+    # embeddings = run_dataprep(embedding_type="840B")
 
     # testing a few other ways to get GloVe embeddings
     # twitter glove

@@ -127,7 +127,7 @@ def get_torch_glove(torch_glove_type):
     torch_glove_folder = os.sep.join([EMBEDDING_FOLDER, f'torch_glove_{torch_glove_path}'])
     # run torchnlp method for GloVe download
     directories = []
-    
+
     if os.path.exists(torch_glove_folder):
         directories = os.listdir(torch_glove_folder)
 
