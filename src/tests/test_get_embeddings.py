@@ -9,8 +9,8 @@ import logging
 
 
 class Test(TestCase):
-    embeddings_dict = DataTest().embeddings_dict()
     run_configuration()
+    embeddings_dict = DataTest().embeddings_dict()
 
     def test_parse_embedding_pickle(self):
         embeddings_dict = Test.embeddings_dict
@@ -28,14 +28,17 @@ class Test(TestCase):
         if embeddings_dict:
             word2idx, idx2word, vectors = get_embeddings(embeddings_dict)
 
-            a_word = random.choice(list(embeddings_dict.keys()))
-            a_vector = embeddings_dict[a_word]
+            a_word = "king"
             idx_of_word = word2idx[a_word]
+
             word_of_idx = idx2word[idx_of_word]
-            vector_of_word = vectors[idx_of_word]
+            vector_dims = [len(i) for i in vectors]
 
             assert a_word == word_of_idx
-            assert a_vector.all() == vector_of_word.all()
+            assert vector_dims[0] == DataTest().embedding_dim
+            assert all(i == DataTest().embedding_dim for i in vector_dims)
+            assert DataTest().embedding_dim == vectors.size()[1]
+
         else:
             logging.info('Test Not Fail - Embedding data not found, check embedding data path')
             pass
@@ -46,7 +49,7 @@ class Test(TestCase):
             embedding_dict_1 = embeddings[0]
             embedding_dict_2 = embeddings[1]
 
-            a_word = random.choice(list(embedding_dict_1.keys()))
+            a_word = "queen"
             assert a_word in embedding_dict_2.keys()
             a_vector_1 = embedding_dict_1[a_word]
             a_vector_2 = embedding_dict_2[a_word]

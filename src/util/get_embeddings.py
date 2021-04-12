@@ -8,11 +8,43 @@ import time
 import numpy as np
 import gc
 from torchnlp.word_to_vector import GloVe
+import torch
 import mmap
 from tqdm import tqdm
+import torch.nn as nn
 
 
-def prep_nn_embeddings(word2idx, vectors, target_vocab, embedding_dim):
+def random_embedding_vector(embedding_dim, scale=0.6):
+    """
+    A helper function to return a randomized embedding space of dimension embedding_dim
+    :param embedding_dim:
+    :return: a randumized numpy array to fill an embedding vector
+    """
+    return np.random.normal(scale=scale, size=(embedding_dim,))
+
+
+def prep_nn_embeddings(vectors, non_trainable=False):
+    """
+    A helper function to return pytorch nn embedding layer.
+    :param vectors: weight matrix of pre-trained or randomized vectors
+    :param non_trainable: bool, default to False. If False, keep static.
+    :return: torch sparse embedding layer, number of embeddings, and number of embedding dims
+
+    source: https://medium.com/@martinpella/how-to-use-pre-trained-word-embeddings-in-pytorch-71ca59249f76
+    """
+
+    num_embeddings, embedding_dim = vectors.size()
+
+    emb_layer = nn.Embedding(num_embeddings, embedding_dim)
+    emb_layer.load_state_dict({'weight': vectors})
+
+    if non_trainable:
+        emb_layer.weight.requires_grad = False
+
+    return emb_layer, num_embeddings, embedding_dim
+
+
+def prep_corpus_embeddings(word2idx, vectors, target_vocab):
     """
     Consume pre-trained embedding with vocab of target corpus, return embedding layer for training.
 
@@ -21,8 +53,10 @@ def prep_nn_embeddings(word2idx, vectors, target_vocab, embedding_dim):
 
     source: https://medium.com/@martinpella/how-to-use-pre-trained-word-embeddings-in-pytorch-71ca59249f76
     """
-    matrix_len = len(target_vocab)
-    vectors_new = np.zeros((matrix_len, embedding_dim))
+
+    matrix_len, embedding_dim = vectors.size()
+
+    vectors_new = torch.zeros((matrix_len, embedding_dim))
     words_found = 0
     word2idx_new = {}
     idx2word_new = {}
@@ -32,7 +66,7 @@ def prep_nn_embeddings(word2idx, vectors, target_vocab, embedding_dim):
             vectors_new[i] = vectors[word2idx[word]]
             words_found += 1
         except KeyError:
-            vectors_new[i] = np.random.normal(scale=0.6, size=(embedding_dim,))
+            vectors_new[i] = torch.from_numpy(random_embedding_vector(embedding_dim=embedding_dim))
 
         word2idx_new.update({word: i})
         idx2word_new.update({i: word})
@@ -52,7 +86,7 @@ def get_embeddings(glove_embeddings):
     :return: Return a 3-Tuple of GloVe embeddings :
              word2idx, dict, {word:int}
              idx2word, dict, {int:word}
-             vectors, list, [numpy array]
+             vectors, torch tensor of torch tensors, [[tensor],[tensor]]
     """
     # Initialize data structs
     words = []
@@ -68,6 +102,8 @@ def get_embeddings(glove_embeddings):
         idx2word[idx] = word
         vectors.append(vector)
         idx += 1
+
+    vectors = torch.stack([torch.from_numpy(item).float() for item in vectors])
 
     return word2idx, idx2word, vectors
 
@@ -204,12 +240,13 @@ def parse_embedding_txt(embedding_file_path):
     """
     logging.info(f'Parsing word embeddings from {embedding_file_path}')
     embedding_dict = {}
+    embedding_dim = 300 if "300d" in embedding_file_path else 200 if "200d" in embedding_file_path else 100 if "100d" in embedding_file_path else 50 if "50d" in embedding_file_path else 25
 
     start_time = time.time()
     with open(embedding_file_path, 'r', encoding="utf-8") as f:
         # for line in f:
         for line in tqdm(f, total=get_num_lines(embedding_file_path), desc='Opening Text File'):
-            word, vector = read_line(line)
+            word, vector = read_line(line, embedding_dim=embedding_dim)
             embedding_dict.update({word: vector})
     end_time = time.time()
     logging.info(f'TEXT Read Time is {end_time-start_time}')
@@ -234,42 +271,56 @@ def get_num_lines(file_path):
     return lines
 
 
-def read_line(line):
+def read_line(line, embedding_dim):
     """
     Read lines in a text file from embeddings.
 
     :param line: Each line of a text open object.
+    :param embedding_dim: the expected vector dimension
     :return: 2-tuple of word (string) and numpy array (vector).
     """
-
+    first = 0
+    rest = 1
     values = line.split()
     # the first element is assumed to be the word
-    word = values[0]
+    word = values[first]
 
     # catch cases where first n strings are repeating as the word
     try:
         # the rest of list is usually the vector but sometimes it is not
-        vector = np.asarray(values[1:], "float32")
+        vector = np.asarray(values[rest:], "float32")
+
     except ValueError:
-        word = return_repeating_word(values)
-        vector = np.asarray(values, "float32")
+        #TODO: words such as ... or -0.0033421 are truncating the vector space from 300 to less than 300,
+        # impacting about a dozen entries, provide random vector for now, fix later
+        word, rest = return_repeating_word(values)
+        # vector = np.asarray(values[rest:], "float32")
+        vector = random_embedding_vector(embedding_dim=embedding_dim)
+
+    if len(vector) != embedding_dim:
+        vector = random_embedding_vector(embedding_dim=embedding_dim)
 
     return tuple((word, vector))
 
 
 def return_repeating_word(values):
     """
-    A helper function for read_line(). Return repeating chars as a single word.
+    A helper function for read_line().
+
+    Address issues where word has repeating chargers, return them as a single word.
 
     :param values: values, a line of embedding text data
-    :return: A string of repeating characters. Manipulate values input with pop(0)
+    :return: A string of repeating characters.
     """
     word = []
-    first_char = values.pop(0)
+    first_char = values[0]
+    counter = 1
     word.append(first_char)
 
-    while values:
-        curr_char = values.pop(0)
+    # while values:
+    for idx, char in enumerate(values[1:]):
+        counter += 1
+        curr_char = char
         if curr_char == first_char:
             word.append(curr_char)
         else:
@@ -277,7 +328,7 @@ def return_repeating_word(values):
 
     word = ''.join(map(str, word))
 
-    return word
+    return word, counter
 
 
 

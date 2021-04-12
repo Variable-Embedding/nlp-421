@@ -41,6 +41,10 @@ class DataTest:
                     return False
 
         self.embedding_file = _find_embedding_pickle(EMBEDDING_FOLDER)
+        self.embedding_dim = 300 if "300d" in self.embedding_file \
+            else 200 if "200d" in self.embedding_file \
+            else 100 if "100d" in self.embedding_file \
+            else 50 if "50d" in self.embedding_file else 25
 
     def embeddings_dict(self):
         if self.embedding_file:
