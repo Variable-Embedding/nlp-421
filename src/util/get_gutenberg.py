@@ -4,13 +4,17 @@ from time import sleep
 from src.util.constants import *
 import logging
 import string
-
+import time
 
 def get_gutenberg(url):
     logging.info('Starting project gutenberg data prep.')
 
     file_name = url.rsplit('/', 1)[-1]
-    file_path = os.sep.join([CORPRA_FOLDER, file_name])
+    gutenberg_folder = os.sep.join([CORPRA_FOLDER, 'gutenberg'])
+    file_path = os.sep.join([gutenberg_folder, file_name])
+
+    if not os.path.exists(gutenberg_folder):
+        os.makedirs(gutenberg_folder)
 
     if os.path.exists(file_path):
         logging.info(f'Found existing book txt data at {file_path}.')
@@ -24,6 +28,9 @@ def get_gutenberg(url):
         with open(file_path, 'w') as f:
             f.write("%s \n" % soup)
         logging.info(f'Wrote book to {file_path}.')
+
+        logging.info('Waiting 5 seconds between URL get next book.')
+        time.sleep(5)
         return read_book_utf(file_path)
 
 
@@ -38,22 +45,21 @@ def simple_vocabulary(book):
 def read_book_utf(file_path):
     f = open(file_path, "r")
 
-    metadata = []
-    metadata_flag = True
+    preamble = []
+    preamble_flag = True
     bookdata = []
     bookdata_flag = False
     disclaimers = []
     disclaimers_flag = False
 
     for line in f:
-        if not line.startswith("**") and metadata_flag:
-            metadata.append(line)
+        if not line.startswith("**") and preamble_flag:
+            preamble.append(line)
         else:
-            metadata_flag = False
+            preamble_flag = False
 
-        if not metadata_flag and "Chapter" not in line and len(line) > 1:
-            if 'CONTENTS' in line:
-                bookdata_flag = True
+        if not preamble_flag:
+            bookdata_flag = True
             if line.startswith("***"):
                 bookdata_flag = False
                 disclaimers_flag = True
@@ -63,11 +69,14 @@ def read_book_utf(file_path):
                 disclaimers.append(line)
     f.close()
 
-    metadata = [i.strip() for i in metadata]
-    bookdata = ' '.join([i.strip() for i in bookdata][1:])
+    preamble = [i.strip() for i in preamble]
+    bookdata = ' '.join([i.strip() for i in bookdata])
     disclaimers = [i.strip() for i in disclaimers]
 
-    book = {'metadata': metadata
+    print(bookdata[:50])
+
+
+    book = {'preamble': preamble
         , 'bookdata': bookdata
         , 'disclaimers': disclaimers}
 

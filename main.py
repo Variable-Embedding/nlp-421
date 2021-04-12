@@ -7,8 +7,8 @@ from src.util.get_gutenberg import get_gutenberg
 
 if __name__ == '__main__':
     run_configuration()
-
     logging.info('Launched main.py')
+
 
     # our custom functions to download and prep glove
     embeddings = run_dataprep(embedding_type="glove_common_crawl")
