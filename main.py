@@ -1,6 +1,7 @@
 from src.runners.run_dataprep import run_dataprep
 from src.util.config import run_configuration
 import logging
+from src.models.toy_model import ToyNN
 
 from src.util.get_gutenberg import get_gutenberg
 
@@ -11,6 +12,7 @@ if __name__ == '__main__':
 
     # our custom functions to prep toy dataset and glove embeddings
     embeddings, corpra = run_dataprep(embedding_type="glove_common_crawl")
+
 
     ### TESTING OTHER TYPES OF EMBEDDINGS HERE:
 

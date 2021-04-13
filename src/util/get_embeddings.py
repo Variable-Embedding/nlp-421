@@ -40,6 +40,8 @@ def prep_nn_embeddings(vectors, non_trainable=False):
 
     if non_trainable:
         emb_layer.weight.requires_grad = False
+    else:
+        emb_layer.weight.requires_grad = True
 
     logging.info(f'Prepared embedding layer for pytorch nn, set trainable to {non_trainable}, '
                  f'to switch this, set prep_nn_embeddings(non_trainable=True).'
