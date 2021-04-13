@@ -41,6 +41,11 @@ def prep_nn_embeddings(vectors, non_trainable=False):
     if non_trainable:
         emb_layer.weight.requires_grad = False
 
+    logging.info(f'Prepared embedding layer for pytorch nn, set trainable to {non_trainable}, '
+                 f'to switch this, set prep_nn_embeddings(non_trainable=True).'
+                 f'\n returning emb_layer ({type(emb_layer)}), num_embeddings ({num_embeddings})'
+                 f', and embedding_dim ({embedding_dim}).')
+
     return emb_layer, num_embeddings, embedding_dim
 
 
@@ -54,7 +59,8 @@ def prep_corpus_embeddings(word2idx, vectors, target_vocab):
     source: https://medium.com/@martinpella/how-to-use-pre-trained-word-embeddings-in-pytorch-71ca59249f76
     """
 
-    matrix_len, embedding_dim = vectors.size()
+    matrix_len = len(target_vocab)
+    embedding_dim = vectors.size()[1]
 
     vectors_new = torch.zeros((matrix_len, embedding_dim))
     words_found = 0
@@ -72,8 +78,8 @@ def prep_corpus_embeddings(word2idx, vectors, target_vocab):
         idx2word_new.update({i: word})
 
     logging.info('Out of {} total words, found {} words in the pre-trained model,'
-                 ' the remaining words initialized randomly.'.format(matrix_len, words_found))
-    logging.info('Returning {} vocabulary embeddings from pre-trained model.'.format(len(vectors_new)))
+                 ' the remaining words initialized randomly.'.format(len(target_vocab), words_found))
+    logging.info('Returning {} vocabulary embeddings for nn training.'.format(len(word2idx_new)))
 
     return word2idx_new, idx2word_new, vectors_new
 
