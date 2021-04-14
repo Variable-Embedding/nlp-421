@@ -9,12 +9,21 @@ import torch.nn as nn
 
 
 class TestModel(TestCase):
+    target_vocab = ["<book_start>", "<title>", "<author>", "the"]
 
     def test_stage_rnn_model(self):
-        target_vocab, _ = stage_prep_corpus(is_gutenberg=True)
 
-        embeddings = stage_prep_embedding(embedding_type="glove_common_crawl"
-                                          , target_vocab=target_vocab)
+        matrix_len = len(TestModel.target_vocab)
+        embedding_dim = 300
+
+        vectors = torch.zeros((matrix_len, embedding_dim))
+
+        for i, word in enumerate(TestModel.target_vocab):
+            vectors[i] = torch.from_numpy(random_embedding_vector(embedding_dim=embedding_dim))
+
+        embeddings = {"emb_layer": vectors
+                    , "num_embeddings": matrix_len
+                    , "embedding_dim": embedding_dim}
 
         embedding_layer = embeddings["emb_layer"]
         dictionary_size = embeddings["num_embeddings"]
@@ -31,14 +40,12 @@ class TestModel(TestCase):
         dropout_probability = .5
         test_dropout_probability = nn.Dropout(1)
 
-        target_vocab = ["<book_start>", "<title>", "<author>", "the"]
-
-        matrix_len = len(target_vocab)
+        matrix_len = len(TestModel.target_vocab)
         embedding_dim = 300
 
         vectors = torch.zeros((matrix_len, embedding_dim))
 
-        for i, word in enumerate(target_vocab):
+        for i, word in enumerate(TestModel.target_vocab):
             vectors[i] = torch.from_numpy(random_embedding_vector(embedding_dim=embedding_dim))
 
         embedding_layer = vectors
