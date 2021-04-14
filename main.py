@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     # our custom functions to prep toy dataset and glove embeddings
     embeddings, corpra = run_dataprep(embedding_type="glove_common_crawl"
-                                      , corpus_type="WikiText2")
+                                      , corpus_type="gutenberg")
 
     ### TESTING OTHER TYPES OF EMBEDDINGS BELOW ###
 

@@ -71,6 +71,11 @@ def stage_prep_embedding(embedding_type, target_glove=None, target_vocab=None, e
         glove_embeddings = parse_embedding_pickle(glove_target)
         word2idx, idx2word, vectors = get_embeddings(glove_embeddings)
 
+        if isinstance(target_vocab, dict):
+
+            print('poo poo')
+            breakpoint()
+
         if target_vocab:
             word2idx, idx2word, vectors = prep_corpus_embeddings(word2idx=word2idx
                                                                , vectors=vectors

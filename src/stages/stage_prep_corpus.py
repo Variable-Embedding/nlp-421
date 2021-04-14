@@ -49,5 +49,8 @@ def stage_prep_corpus(corpus_type='gutenberg'):
 
     elif corpus_type == "WikiText2":
 
-        get_torch_text(corpus_type=corpus_type)
+        vocabulary = get_torch_text(corpus_type=corpus_type)
+
         breakpoint()
+
+        return vocabulary, None
