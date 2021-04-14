@@ -32,6 +32,4 @@ def run_configuration():
     logging.basicConfig(filename=filename, format=format, level=logging.INFO)
     logging.getLogger().addHandler(stream_handler)
 
-
-
     logger.info("Logging configurations finished.")

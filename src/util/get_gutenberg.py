@@ -149,4 +149,6 @@ def read_book_utf(file_path):
         , 'bookdata': bookdata
         , 'disclaimers': disclaimers}
 
+    f.close()
+
     return book

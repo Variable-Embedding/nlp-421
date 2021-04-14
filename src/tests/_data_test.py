@@ -52,7 +52,10 @@ class DataTest:
         else:
             return False
 
-    def compare_embedding_dicts(self, embedding_file_1="glove_common_crawl", embedding_file_2='torch_glove_840B'):
+    def compare_embedding_dicts(self
+                              , embedding_file_1="glove_common_crawl"
+                              , embedding_file_2='torch_glove_840B'
+                                ):
         embedding_1_path = os.sep.join([EMBEDDING_FOLDER, embedding_file_1])
         embedding_2_path = os.sep.join([EMBEDDING_FOLDER, embedding_file_2])
 
