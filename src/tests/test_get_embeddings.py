@@ -17,7 +17,7 @@ class Test(TestCase):
         if embeddings_dict:
             a_word = random.choice(list(embeddings_dict.keys()))
             distance = spatial.distance.euclidean(embeddings_dict[a_word], embeddings_dict[a_word])
-            assert distance == 0
+            self.assertEqual(distance, 0)
         else:
             logging.info('Test Not Fail - Embedding data not found, check embedding data path')
             pass
@@ -34,10 +34,10 @@ class Test(TestCase):
             word_of_idx = idx2word[idx_of_word]
             vector_dims = [len(i) for i in vectors]
 
-            assert a_word == word_of_idx
-            assert vector_dims[0] == DataTest().embedding_dim
-            assert all(i == DataTest().embedding_dim for i in vector_dims)
-            assert DataTest().embedding_dim == vectors.size()[1]
+            self.assertEqual(a_word, word_of_idx)
+            self.assertEqual(vector_dims[0], DataTest().embedding_dim)
+            self.assertTrue(all(i == DataTest().embedding_dim for i in vector_dims))
+            self.assertEqual(DataTest().embedding_dim, vectors.size()[1])
 
         else:
             logging.info('Test Not Fail - Embedding data not found, check embedding data path')
@@ -50,10 +50,10 @@ class Test(TestCase):
             embedding_dict_2 = embeddings[1]
 
             a_word = "queen"
-            assert a_word in embedding_dict_2.keys()
+            self.assertIn(a_word, embedding_dict_2.keys())
             a_vector_1 = embedding_dict_1[a_word]
             a_vector_2 = embedding_dict_2[a_word]
-            assert a_vector_1.all() == a_vector_2.all()
+            self.assertEqual(a_vector_1.all(), a_vector_2.all())
         else:
             logging.info('Test Not Fail - Embedding data not found, check embedding data path')
             pass
