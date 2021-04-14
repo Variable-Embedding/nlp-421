@@ -1,17 +1,18 @@
 from src.util.get_gutenberg import get_gutenberg, simple_vocabulary
+from src.util.get_torch_text import get_torch_text
 from src.util.constants import *
 import logging
 import string
 import time
 
-def stage_prep_corpus(is_gutenberg=True):
+
+def stage_prep_corpus(corpus_type='gutenberg'):
     """
     Manage all functions to process a target corpus, return a vocabulary for now.
     :return: A list of words representing all the unique words in a corpus, i.e. the vocabulary.
     """
 
-    if is_gutenberg:
-        #TODO: Set up method to get all book links here
+    if corpus_type == 'gutenberg':
         book_urls = [
                      "https://www.gutenberg.org/files/1342/1342-0.txt"
                    , "https://www.gutenberg.org/files/11/11-0.txt"
@@ -45,3 +46,8 @@ def stage_prep_corpus(is_gutenberg=True):
         vocabulary = list(set(vocabulary))
         logging.info(f'Corpus returning {book_counter} books, with vocab size of {len(vocabulary)}, a total of {len(corpra)} tokens.')
         return vocabulary, corpra
+
+    elif corpus_type == "WikiText2":
+
+        get_torch_text(corpus_type=corpus_type)
+        breakpoint()

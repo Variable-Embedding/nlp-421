@@ -17,4 +17,5 @@ wordcloud
 scipy
 bs4
 pytorch-nlp
+torchtext
 
