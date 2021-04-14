@@ -60,12 +60,13 @@ class Model(nn.Module):
         else:
             self.device = torch.device("cpu")
 
-        self.dropout = nn.Dropout(dropout_probability)
-
         self.lstm = LSTM(self.embedding_size
                          , number_of_layers
                          , dropout_probability
                          , lstm_configuration)
+        # if only one layer, force dropout probability to 1 (none)
+        if number_of_layers == 1 and dropout_probability != 1:
+            dropout_probability = 1
 
         self.dropout = nn.Dropout(dropout_probability)
 
