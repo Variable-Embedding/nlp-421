@@ -8,23 +8,55 @@ class Test(TestCase):
     def test_get_torch_text(self):
         nn_data = run_dataprep(embedding_type="glove_common_crawl", corpus_type="WikiText2")
 
-        a_word = "king"
-
         data_sets = nn_data.keys()
 
-        # 'word2idx', 'vectors', 'target_vocab', 'vocabulary', 'corpus'
+        global_corpus = []
+        for data_set in data_sets:
+            data = nn_data[data_set]
+            target_vocab = data["target_vocab"]
+            global_corpus.append(target_vocab)
 
-        check_vectors = []
+        common_corpus = list(set(set(global_corpus[0])
+                                 .intersection(set(global_corpus[1])))
+                             .intersection(set(global_corpus[2])))
+
+        a_common_token = random.choice(common_corpus)
+
+        # 'word2idx', 'vectors', 'target_vocab', 'vocabulary', 'corpus'
+        """
+        y = {
+            # word2idx -> dict of token to idx
+            "word2idx": word2idx
+            # torch tensor embedding layer
+             , "vectors": vectors
+            # target_vocab -> list of tokens
+             , "target_vocab": target_vocab
+            # vocabulary -> torchtext Vocab object
+             , "vocabulary": vocab
+            # the numeric representation of corpus, in original sequence
+             , "corpus": corpus
+             }
+        """
+
+        vectors = []
 
         for data_set in data_sets:
             data = nn_data[data_set]
             word2idx = data["word2idx"]
-            a_word_idx = word2idx[a_word]
+            a_common_tokens_idx = word2idx[a_common_token]
             target_vocab = data["target_vocab"]
-            vectors = data["vectors"]
+            vector = data["vectors"]
+            a_common_tokens_vector = vector[a_common_tokens_idx]
 
-            self.assertEqual(a_word, target_vocab[a_word_idx])
-            check_vectors.append(vectors[a_word_idx])
+            vectors.append(a_common_tokens_vector)
+
+            self.assertEqual(a_common_token, target_vocab[a_common_tokens_idx])
+
+        self.assertEqual(vectors[0].all(), vectors[1].all())
+        self.assertEqual(vectors[1].all(), vectors[2].all())
+
+
+
 
         #TODO check to amke sure vectors are the same for a given word across corpra
 

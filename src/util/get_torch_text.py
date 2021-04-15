@@ -62,7 +62,6 @@ def make_torch_corpra(torch_text_path, corpus_type, vocabulary):
 
         for file in files:
             file_path = os.sep.join([torch_text_path, file])
-            counter = Counter()
             f = open(file_path, 'r')
 
             key = 'train' if '.train.' in file else 'test' if '.test.' in file else 'valid'
@@ -80,7 +79,6 @@ def make_torch_corpra(torch_text_path, corpus_type, vocabulary):
             f.close()
 
         return corpra
-
 
 
 def make_torch_vocab(torch_text_path, corpus_type):

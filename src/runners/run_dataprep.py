@@ -20,7 +20,9 @@ def run_dataprep(embedding_type, corpus_type, target_glove=None):
         vocab = vocabulary[data_set]
         corpus = corpra[data_set]
         vectors = embeddings["vectors"]
+        # torchtext.vocab.Vocab.stoi -> dict of token string to numeric id
         word2idx = vocab.stoi
+        # torchtext.vocab.Vocab.itos -> list of token string indexed by numeric id
         target_vocab = vocab.itos
 
         x = {"word2idx": word2idx
@@ -29,10 +31,16 @@ def run_dataprep(embedding_type, corpus_type, target_glove=None):
 
         word2idx, idx2word, vectors = prep_corpus_embeddings(**x)
 
-        y = {"word2idx": word2idx
+        y = {
+            # word2idx -> dict of token to idx
+            "word2idx": word2idx
+            # torch tensor embedding layer
              , "vectors": vectors
+            # target_vocab -> list of tokens
              , "target_vocab": target_vocab
+            # vocabulary -> torchtext Vocab object
              , "vocabulary": vocab
+            # the numeric representation of corpus, in original sequence
              , "corpus": corpus
              }
 
