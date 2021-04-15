@@ -8,7 +8,6 @@ pywikibot
 pyyaml
 requests
 seaborn
-sidetable
 sparqlwrapper
 termplotlib
 torch
