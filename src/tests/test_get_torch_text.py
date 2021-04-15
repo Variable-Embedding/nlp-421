@@ -2,10 +2,12 @@ from unittest import TestCase
 
 import random
 from src.runners.run_dataprep import run_dataprep
-
+from src.util.config import run_configuration
 
 class Test(TestCase):
     def test_get_torch_text(self):
+        run_configuration()
+        
         nn_data = run_dataprep(embedding_type="glove_common_crawl", corpus_type="WikiText2")
 
         data_sets = nn_data.keys()
@@ -38,9 +40,3 @@ class Test(TestCase):
 
         self.assertEqual(vectors[0].all(), vectors[1].all())
         self.assertEqual(vectors[1].all(), vectors[2].all())
-
-
-
-
-        #TODO check to amke sure vectors are the same for a given word across corpra
-

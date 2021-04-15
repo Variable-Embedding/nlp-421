@@ -24,7 +24,7 @@ def run_dataprep(embedding_type, corpus_type, target_glove=None):
     # pre-trained embedding -> {"word2idx": word2idx, "idx2word": idx2word, "vectors": vectors}
     embeddings = stage_prep_embedding(embedding_type=embedding_type, target_glove=target_glove)
     vocabulary, corpra = stage_prep_corpus(corpus_type)
-
+    # data_sets -> 'train', 'valid', 'test'
     data_sets = vocabulary.keys()
 
     nn_data = {}
