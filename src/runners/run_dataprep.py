@@ -7,6 +7,19 @@ import logging
 
 def run_dataprep(embedding_type, corpus_type, target_glove=None):
     """
+    :returns: a dictionary of data keyed by phases: 'train', 'valid', 'test'
+           {
+            # word2idx -> dict of token to idx
+            "word2idx": word2idx
+            # vectors -> torch tensor embedding layer
+             , "vectors": vectors
+            # target_vocab -> list of tokens
+             , "target_vocab": target_vocab
+            # vocabulary -> torchtext Vocab object
+             , "vocabulary": vocab
+            # corpus -> the numeric representation of corpus, in original corpus sequence
+             , "corpus": corpus
+             }
     """
     # pre-trained embedding -> {"word2idx": word2idx, "idx2word": idx2word, "vectors": vectors}
     embeddings = stage_prep_embedding(embedding_type=embedding_type, target_glove=target_glove)

@@ -22,22 +22,6 @@ class Test(TestCase):
 
         a_common_token = random.choice(common_corpus)
 
-        # 'word2idx', 'vectors', 'target_vocab', 'vocabulary', 'corpus'
-        """
-        y = {
-            # word2idx -> dict of token to idx
-            "word2idx": word2idx
-            # torch tensor embedding layer
-             , "vectors": vectors
-            # target_vocab -> list of tokens
-             , "target_vocab": target_vocab
-            # vocabulary -> torchtext Vocab object
-             , "vocabulary": vocab
-            # the numeric representation of corpus, in original sequence
-             , "corpus": corpus
-             }
-        """
-
         vectors = []
 
         for data_set in data_sets:
