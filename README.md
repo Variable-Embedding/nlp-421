@@ -5,6 +5,9 @@ An exploratory project to get and process GloVe embeddings for use in a NLP neur
 ## Usage
 
 * Get Started From Terminal
+
+* Project created with Anaconda version (conda=4.9.2)
+
 ```terminal
 # make new conda environment (optional but recommended)
 conda create -n nlp-421
