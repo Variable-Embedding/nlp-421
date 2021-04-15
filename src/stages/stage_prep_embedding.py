@@ -2,13 +2,12 @@ import logging
 from src.util.get_embeddings import download_embeddings\
     , parse_embedding_pickle\
     , get_embeddings\
-    , get_torch_glove\
-    , prep_corpus_embeddings\
-    , prep_nn_embeddings
+    , get_torch_glove
+
 from src.util.constants import *
 
 
-def stage_prep_embedding(embedding_type, target_glove=None, target_vocab=None, embedding_dim=300):
+def stage_prep_embedding(embedding_type, target_glove=None):
     """
     Download and prepare GloVe embeddings for modeling.
 
@@ -71,34 +70,9 @@ def stage_prep_embedding(embedding_type, target_glove=None, target_vocab=None, e
         glove_embeddings = parse_embedding_pickle(glove_target)
         word2idx, idx2word, vectors = get_embeddings(glove_embeddings)
 
-        if isinstance(target_vocab, dict):
+        embeddings = {"word2idx": word2idx, "idx2word": idx2word, "vectors": vectors}
 
-            print('poo poo')
-            breakpoint()
-
-        if target_vocab:
-            word2idx, idx2word, vectors = prep_corpus_embeddings(word2idx=word2idx
-                                                               , vectors=vectors
-                                                               , target_vocab=target_vocab
-                                                                 )
-
-            logging.info("Returning nn embeddings for corpus based on pre-trained model.")
-
-        else:
-            logging.info('Returning all pre-trained embedding data: word2idx, idx2word, vectors')
-
-        emb_layer, num_embeddings, embedding_dim = prep_nn_embeddings(vectors=vectors)
-
-        # not sure if we need all these but making them available; prune later what we do not need in nn
-        nn_embedding = {"emb_layer": emb_layer
-                      , "num_embeddings": num_embeddings
-                      , "embedding_dim": embedding_dim
-                      , "word2idx": word2idx
-                      , "idx2word": idx2word
-                      , "vectors": vectors
-                        }
-
-        return nn_embedding
+        return embeddings
 
 
 

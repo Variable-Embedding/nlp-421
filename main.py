@@ -8,8 +8,7 @@ if __name__ == '__main__':
     logging.info('Launched main.py')
 
     # our custom functions to prep toy dataset and glove embeddings
-    embeddings, corpra = run_dataprep(embedding_type="glove_common_crawl"
-                                      , corpus_type="gutenberg")
+    nn_data = run_dataprep(embedding_type="glove_common_crawl", corpus_type="WikiText2")
 
     ### TESTING OTHER TYPES OF EMBEDDINGS BELOW ###
 

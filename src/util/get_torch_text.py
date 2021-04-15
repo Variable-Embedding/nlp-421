@@ -4,6 +4,10 @@ import logging
 
 import torch
 from torchtext.datasets.wikitext2 import WikiText2
+from torchtext.vocab import build_vocab_from_iterator
+from torchtext.data.utils import get_tokenizer
+from collections import Counter
+from torchtext.vocab import Vocab
 from torchtext.experimental.vocab import build_vocab_from_text_file
 from torchtext.experimental.transforms import basic_english_normalize
 
@@ -33,6 +37,9 @@ def get_torch_text(corpus_type):
 
             vocabulary = read_torch_vocab(torch_text_path, corpus_type)
             return vocabulary
+    else:
+
+        return
 
 
 def read_torch_vocab(torch_text_path, corpus_type):
@@ -51,19 +58,28 @@ def read_torch_vocab(torch_text_path, corpus_type):
                      f'\tReturning copra from disk instead of downloading them.\n'
                      f'\tTo force new download, delete or rename these files:\n'
                      f'\t{files}')
-        tokenizer = basic_english_normalize()
-        jit_tokenizer = torch.jit.script(tokenizer)
+
+        tokenizer = get_tokenizer('basic_english')
         vocabulary = {}
-        keys = []
+
         for file in files:
             file_path = os.sep.join([torch_text_path, file])
+            counter = Counter()
             f = open(file_path, 'r')
-            v = build_vocab_from_text_file(f, jit_tokenizer)
-            key = 'train' if ".train." in file else "test" if ".test." in file else "valid"
-            keys.append(key)
+
+            for line in f:
+                counter.update(tokenizer(line))
+
+            v = Vocab(counter, min_freq=1)
+            key = 'train' if '.train.' in file else 'test' if '.test.' in file else 'valid'
             vocabulary.update({key: v})
-        logging.info(f'Returning {len(vocabulary)}x {type(vocabulary["train"])} objects'
-                     f'inside a dictionary keyed by {keys}.')
+            f.close()
+
+        logging.info(f'Completed parsing vocab for {corpus_type}.')
+        for k, v in vocabulary.items():
+            logging.info(f'Dataset {k}: with vocabulary of length: {len(v)}.')
+
         return vocabulary
+
 
 

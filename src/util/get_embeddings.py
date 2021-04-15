@@ -51,7 +51,7 @@ def prep_nn_embeddings(vectors, non_trainable=False):
     return emb_layer, num_embeddings, embedding_dim
 
 
-def prep_corpus_embeddings(word2idx, vectors, target_vocab):
+def prep_corpus_embeddings(word2idx, vectors, target_vocab, **kwargs):
     """
     Consume pre-trained embedding with vocab of target corpus, return embedding layer for training.
 
@@ -79,11 +79,15 @@ def prep_corpus_embeddings(word2idx, vectors, target_vocab):
         word2idx_new.update({word: i})
         idx2word_new.update({i: word})
 
+    remainder = len(target_vocab) - words_found
+
     logging.info('Out of {} total words, found {} words in the pre-trained model,'
-                 ' the remaining words initialized randomly.'.format(len(target_vocab), words_found))
+                 ' {} words initialized randomly.'.format(len(target_vocab), words_found, remainder))
     logging.info('Returning {} vocabulary embeddings for nn training.'.format(len(word2idx_new)))
 
-    return word2idx_new, idx2word_new, vectors_new
+    embeddings = {"word2idx": word2idx_new, "idx2word": idx2word_new, "vectors": vectors_new}
+
+    return embeddings
 
 
 def get_embeddings(glove_embeddings):
