@@ -4,12 +4,6 @@ An exploratory project to get and process GloVe embeddings for use in a NLP neur
 
 ## Usage
 
-* Run main.py
-
-```terminal
-python main.py
-```
-
 * Get Started From Terminal
 ```terminal
 # make new conda environment
@@ -20,6 +14,11 @@ conda activate nlp-421
 
 # install requirements
 make install
+```
+
+* Run Script With Defaults
+```terminal
+make run
 ```
 
 ## Current Status
