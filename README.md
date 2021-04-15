@@ -10,6 +10,11 @@ An exploratory project to get and process GloVe embeddings for use in a NLP neur
 python main.py
 ```
 
+## Current Status
+
+* Currently focusing on leveraging pre-built methods from torchtext and torchnlp to get datasets and load vectors for nn training. 
+* See branch torchtext
+
 ## Resources
 
 * GloVe: [https://nlp.stanford.edu/projects/glove/](https://nlp.stanford.edu/projects/glove/)
