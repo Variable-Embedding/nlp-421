@@ -10,6 +10,18 @@ An exploratory project to get and process GloVe embeddings for use in a NLP neur
 python main.py
 ```
 
+* Get started
+```terminal
+# make new conda environment
+conda create -n nlp-421
+
+# activate conda environment
+conda activate nlp-421
+
+# install requirements
+pip install -r requirements.txt
+```
+
 ## Current Status
 
 * Currently focusing on leveraging pre-built methods from torchtext and torchnlp to get datasets and load vectors for nn training. 

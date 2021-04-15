@@ -7,7 +7,7 @@ from src.util.config import run_configuration
 class Test(TestCase):
     def test_get_torch_text(self):
         run_configuration()
-        
+
         nn_data = run_dataprep(embedding_type="glove_common_crawl", corpus_type="WikiText2")
 
         data_sets = nn_data.keys()
