@@ -10,7 +10,7 @@ An exploratory project to get and process GloVe embeddings for use in a NLP neur
 python main.py
 ```
 
-* Get started
+* Get Started From Terminal
 ```terminal
 # make new conda environment
 conda create -n nlp-421
@@ -19,7 +19,7 @@ conda create -n nlp-421
 conda activate nlp-421
 
 # install requirements
-pip install -r requirements.txt
+make install
 ```
 
 ## Current Status
