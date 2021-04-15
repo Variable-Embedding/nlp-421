@@ -14,6 +14,6 @@ def stage_prep_corpus(corpus_type):
 
     if corpus_type == "WikiText2":
 
-        vocabulary = get_torch_text(corpus_type=corpus_type)
+        vocabulary, corpra = get_torch_text(corpus_type=corpus_type)
 
-        return vocabulary
+        return vocabulary, corpra

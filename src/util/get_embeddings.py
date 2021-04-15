@@ -85,9 +85,9 @@ def prep_corpus_embeddings(word2idx, vectors, target_vocab, **kwargs):
                  ' {} words initialized randomly.'.format(len(target_vocab), words_found, remainder))
     logging.info('Returning {} vocabulary embeddings for nn training.'.format(len(word2idx_new)))
 
-    embeddings = {"word2idx": word2idx_new, "idx2word": idx2word_new, "vectors": vectors_new}
+    # embeddings = {"word2idx": word2idx_new, "idx2word": idx2word_new, "vectors": vectors_new}
 
-    return embeddings
+    return word2idx_new, idx2word_new, vectors_new
 
 
 def get_embeddings(glove_embeddings):
