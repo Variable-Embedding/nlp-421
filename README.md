@@ -6,13 +6,13 @@ An exploratory project to get and process GloVe embeddings for use in a NLP neur
 
 * Get Started From Terminal
 ```terminal
-# make new conda environment
+# make new conda environment (optional but recommended)
 conda create -n nlp-421
 
-# activate conda environment
+# activate conda environment (if using your own env)
 conda activate nlp-421
 
-# install requirements
+# install requirements (a wrapper for pip install)
 make install
 ```
 
