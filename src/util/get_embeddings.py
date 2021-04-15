@@ -12,7 +12,7 @@ import torch
 import mmap
 from tqdm import tqdm
 import torch.nn as nn
-
+from src.util.spinning_cursor import Spinner
 
 def random_embedding_vector(embedding_dim, scale=0.6):
     """
@@ -168,7 +168,7 @@ def download_embeddings(url, unzip_path):
 
     directory = os.listdir(unzip_path)
 
-    if len(directory) > 0:
+    if len(directory) > 0 and any(".txt" in i for i in directory):
         logging.info(f'Directory Not Empty {unzip_path}.')
         logging.info(f'Current files {directory}')
         logging.info(f'Skipping download from URL: {url} - to force download, delete or rename files in this directory.')
@@ -176,11 +176,39 @@ def download_embeddings(url, unzip_path):
         write_pickle(directory, unzip_path)
 
     else:
-        logging.info(f'Starting download from {url}. This may take a while.')
-        # TODO: Add progress bar here for long download operations.
-        r = requests.get(url)
-        z = zipfile.ZipFile(io.BytesIO(r.content))
-        z.extractall(unzip_path)
+        # source: https://stackoverflow.com/questions/37573483/progress-bar-while-download-file-over-http-with-requests
+        if not any(".zip" in i for i in directory):
+            logging.info(f'Starting download from {url}. This may take a while.')
+
+            r = requests.get(url, stream=True, allow_redirects=True)
+            total_size = int(r.headers.get('content-length'), 0)
+            block_size = 1024
+            file = url.split('/')[-1]
+            file_path = os.sep.join([unzip_path, file])
+            pbar = tqdm(total=total_size, unit="iB", unit_scale=True, desc=f"Downloading {file}")
+
+            with open(file_path, 'wb') as f:
+                for data in r.iter_content(block_size):
+                    pbar.update(len(data))
+                    f.write(data)
+
+            pbar.close()
+
+            if total_size != 0 and pbar.n != total_size:
+                logging.warning(f'ERROR in Download for {url}, byte size does not match expected size.')
+
+            directory = os.listdir(unzip_path)
+
+        logging.info(f'Found embedding files on local, unzipping {directory}.')
+
+        for embedding_file in directory:
+            if embedding_file.endswith('.zip'):
+                z = zipfile.ZipFile(os.sep.join([unzip_path, embedding_file]))
+                z.extractall(unzip_path)
+        # prior method (simpler but no progress)
+        # r = requests.get(url)
+        # z = zipfile.ZipFile(io.BytesIO(r.content))
+        # z.extractall(unzip_path)
         directory = os.listdir(unzip_path)
         logging.info(f'Downloaded {directory} to {unzip_path}')
 
@@ -208,18 +236,26 @@ def write_pickle(directory, unzip_path):
 
         for text_file in directory:
             text_file_path = os.sep.join([unzip_path, text_file])
-            embedding_dict = parse_embedding_txt(text_file_path)
 
-            pickle_file = f'{Path(text_file).stem}.pickle'
-            pickle_file_path = os.sep.join([unzip_path, pickle_file])
+            if text_file_path.endswith(".txt"):
 
-            f = open(pickle_file_path, "wb")
-            pickle.dump(embedding_dict, f, protocol=2)
-            f.close()
-            # test read pickle
-            parse_embedding_pickle(pickle_file_path)
+                embedding_dict = parse_embedding_txt(text_file_path)
 
-            logging.info(f'Wrote embedding pickle to {pickle_file_path}.')
+                logging.info(f'Parsing embedding files as pickles. This may take a while.')
+
+
+                pickle_file = f'{Path(text_file).stem}.pickle'
+                pickle_file_path = os.sep.join([unzip_path, pickle_file])
+
+                # TODO: Add a spinning pbar or something here
+                f = open(pickle_file_path, "wb")
+                pickle.dump(embedding_dict, f, protocol=2)
+                f.close()
+
+                # test read pickle
+                parse_embedding_pickle(pickle_file_path)
+
+                logging.info(f'Wrote embedding pickle to {pickle_file_path}.')
 
 
 def parse_embedding_pickle(embedding_file_path):
