@@ -36,6 +36,7 @@ class Model(nn.Module):
                  , device="cpu"
                  , sequence_step_size=None
                  , lstm_configuration="default"
+                 , model_type='lstm'
                  , **kwargs
                  ):
 
@@ -61,31 +62,37 @@ class Model(nn.Module):
         # if only one layer, force dropout probability to 1 (none)
         if number_of_layers == 1 and dropout_probability > 0:
             dropout_probability = 1
+        # a default embedding layer
+        self.embedding = nn.Embedding(dictionary_size, embedding_size)
 
+        # Set initial weights.
+        for param in self.parameters():
+            nn.init.uniform_(param, -max_init_param, max_init_param)
+        # if provided, override embedding layer with pre-trained
         if embedding_layer:
             self.embedding = embedding_layer
-        else:
-            self.embedding = nn.Embedding(dictionary_size, embedding_size)
-            # Set initial weights.
-            for param in self.parameters():
-                nn.init.uniform_(param, -max_init_param, max_init_param)
 
-        self.lstm = LSTM(self.embedding_size
-                         , number_of_layers
-                         , dropout_probability
-                         , lstm_configuration)
+        if model_type == 'lstm':
+            self.lstm = LSTM(self.embedding_size
+                             , number_of_layers
+                             , dropout_probability
+                             , lstm_configuration)
+        else:
+            #TODO: we can do other types like transformer here
+            transformer = 0
+
 
         self.dropout = nn.Dropout(dropout_probability)
 
     def forward(self, X, states=None):
         X = self.embedding(X)
+        # TODO: confirm where to do dropout, when, etc.
         X = self.dropout(X)
         X, states = self.lstm(X, states)
         X = self.dropout(X)
         # X = self.pre_output(X)
         output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
         return output, states
-
 
 
 class LSTM(nn.Module):
@@ -115,9 +122,9 @@ class LSTM(nn.Module):
 
         self.configuration = configurations[lstm_configuration]
 
-        self.lstm = nn.LSTM(embedding_size
-                            , embedding_size
-                            , number_of_layers=number_of_layers
+        self.lstm = nn.LSTM(input_size=embedding_size
+                            , hidden_size=embedding_size
+                            , num_layers=number_of_layers
                             , dropout=dropout_probability
                             )
 
