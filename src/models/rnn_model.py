@@ -41,7 +41,7 @@ class Model(nn.Module):
 
         super().__init__()
         self.dictionary_size = dictionary_size
-        self.embedding_layer = embedding_layer
+        self.embedding = embedding_layer
         self.embedding_size = embedding_size
         self.number_of_layers = number_of_layers
         self.batch_size = batch_size
@@ -70,11 +70,13 @@ class Model(nn.Module):
 
         self.dropout = nn.Dropout(dropout_probability)
 
+        self.gru = nn.GRU(self.embedding_size, self.hidden_size, self.number_of_layers, batch_first=True)
+
     def forward(self, inp, hidden):
-        return self.gru(self.embedding(inp), hidden)
+        return self.gru(self.embedding(inp), self.hidden_size)
 
     def init_hidden(self, batch_size):
-        return Variable(torch.zeros(self.num_layers, batch_size, self.hidden_size))
+        return Variable(torch.zeros(self.number_of_layers, batch_size, self.hidden_size))
 
 
 class LSTM(nn.Module):
@@ -106,7 +108,7 @@ class LSTM(nn.Module):
 
         self.lstm = nn.LSTM(embedding_size
                             , embedding_size
-                            , num_layers=number_of_layers
+                            , number_of_layers=number_of_layers
                             , dropout=dropout_probability
                             )
 
