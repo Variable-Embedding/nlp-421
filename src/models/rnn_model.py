@@ -6,20 +6,18 @@ from torch.autograd import Variable
 class Model(nn.Module):
     """Initialize PyTorch Model Class.
 
-    :params:
-    ----------
-    dictionary_size: integer, required. Total number of words in the dictionary.
-    embedding_size: integer, required. Number of features in the embedding space, maybe 300, 100, or 50.
-    number_of_layers: integer, default to 1. Number of LSTM layers.
-    droupout_probability: float, default to 0.5. Probability for dropping nn dropout.
-    batch_size: integer, default to 64. The batch size for this model.
-    sequence_length: integer, default to 30. The token sequence length.
-    max_norm: integer, default to 2. The maximum norm for back propagation.
-    max_init_param: float, default to 0.01. The maximum weight after initialization.
-    device: string, default to "cpu" or "gpu" if detected. The hardware device to train on.
-    sequence_step_size: None, optional. Default to sequence length.
+    :param dictionary_size: integer, required. Total number of words in the dictionary.
+    :param embedding_size: integer, required. Number of features in the embedding space, maybe 300, 100, or 50.
+    :param number_of_layers: integer, default to 1. Number of LSTM layers.
+    :param dropout_probability: float, default to 0.5. Probability for dropping nn dropout.
+    :param batch_size: integer, default to 64. The batch size for this model.
+    :param sequence_length: integer, default to 30. The token sequence length.
+    :param max_norm: integer, default to 2. The maximum norm for back propagation.
+    :param max_init_param: float, default to 0.01. The maximum weight after initialization.
+    :param device: string, default to "cpu" or "gpu" if detected. The hardware device to train on.
+    :param sequence_step_size: None, optional. Default to sequence length.
                         The step size for batching (the smaller it is, the more overlap).
-    lstm_configuration: a string, default to "default". Enable future options to tinker with model.
+    :params lstm_configuration: a string, default to "default". Enable future options to tinker with model.
 
     primary_reference: https://github.com/iryzhkov/nlp-pipeline
     secondary_reference: https://medium.com/@martinpella/how-to-use-pre-trained-word-embeddings-in-pytorch-71ca59249f76
@@ -87,12 +85,11 @@ class LSTM(nn.Module):
                  ):
         """Initialization for LSTM model.
 
-        :params:
-        ----------
-        embedding_size: integer, required. Number of features in the embedding space.
-        number_of_layers: integer, required. Number of LSTM layers (for stacked-LSTM).
-        dropout_probability: float, default to 0.5. Probability for dropping nn dropout.
-        lstm_configuration: the configuration of the lstm. Possible configurations:
+        :param: embedding_size: integer, required. Number of features in the embedding space.
+        :param number_of_layers: integer, required. Number of LSTM layers (for stacked-LSTM).
+        :param: dropout_probability: float, default to 0.5. Probability for dropping nn dropout.
+        :param: lstm_configuration: the configuration of the lstm. Possible configurations:
+
         Name            Description
         default         The regular stacked-lstm architecture
         *TBD other options

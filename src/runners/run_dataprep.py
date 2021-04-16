@@ -6,7 +6,8 @@ import logging
 
 
 def run_dataprep(embedding_type, corpus_type, target_glove=None):
-    """
+    """Run data prep functions for embedding and corpra.
+
     :returns: a dictionary of data keyed by phases: 'train', 'valid', 'test'
            {
             # word2idx -> dict of token to idx

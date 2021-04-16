@@ -14,10 +14,10 @@ from torchtext.experimental.transforms import basic_english_normalize
 
 
 def get_torch_text(corpus_type):
-    """
-    A convenience wrapper to get corpra for experimentation with torch text.
+    """A convenience wrapper to get corpra for experimentation with torch text.
+
     :param corpus_type: string, required. Any of available torch text dataset types.
-    :return:
+    :return: (vocabulary, corpra) or None
 
     source: https://github.com/pytorch/text/tree/master/torchtext
     """
@@ -47,6 +47,12 @@ def get_torch_text(corpus_type):
 
 
 def make_torch_corpra(torch_text_path, corpus_type, vocabulary):
+    """Leveraging torch text experimental functions.
+
+    :param torch_text_path: string, file path to torchtext file
+    :param corpus_type: string, Required. One of 'train', 'valid', 'test'
+    :return: corpra
+    """
 
     logging.info('Starting make_torch_corpra()')
 
@@ -84,9 +90,9 @@ def make_torch_corpra(torch_text_path, corpus_type, vocabulary):
 def make_torch_vocab(torch_text_path, corpus_type):
     """Leveraging torch text experimental functions.
 
-    :param torch_text_path:
-    :param corpus_type:
-    :return:
+    :param torch_text_path: string, file path to torchtext file
+    :param corpus_type: string, Required. One of 'train', 'valid', 'test'
+    :return: vocabulary
 
     source: https://github.com/pytorch/text/blob/master/torchtext/experimental/vocab.py
     """

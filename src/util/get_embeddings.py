@@ -15,17 +15,18 @@ import torch.nn as nn
 from src.util.spinning_cursor import Spinner
 
 def random_embedding_vector(embedding_dim, scale=0.6):
-    """
-    A helper function to return a randomized embedding space of dimension embedding_dim
-    :param embedding_dim:
+    """A helper function to return a randomized embedding space of dimension embedding_dim
+
+    :param embedding_dim: integer, usually 300 or one of 200, 100, 50, 25, depending on embedding space.
+    :param scale: stdev of distribution for np.random.normal function
     :return: a randumized numpy array to fill an embedding vector
     """
     return np.random.normal(scale=scale, size=(embedding_dim,))
 
 
 def prep_nn_embeddings(vectors, non_trainable=False):
-    """
-    A helper function to return pytorch nn embedding layer.
+    """A helper function to return pytorch nn embedding layer.
+
     :param vectors: weight matrix of pre-trained or randomized vectors
     :param non_trainable: bool, default to False. If False, keep static.
     :return: torch sparse embedding layer, number of embeddings, and number of embedding dims
@@ -52,10 +53,9 @@ def prep_nn_embeddings(vectors, non_trainable=False):
 
 
 def prep_corpus_embeddings(word2idx, vectors, target_vocab, **kwargs):
-    """
-    Consume pre-trained embedding with vocab of target corpus, return embedding layer for training.
+    """Consume pre-trained embedding with vocab of target corpus, return embedding layer for training.
 
-    :returns : an embedding space t hat has words from the target vocabulary, if they exist, or
+    :return: an embedding space t hat has words from the target vocabulary, if they exist, or
     initialize random embedding for new words from the target corpus
 
     source: https://medium.com/@martinpella/how-to-use-pre-trained-word-embeddings-in-pytorch-71ca59249f76
@@ -91,8 +91,7 @@ def prep_corpus_embeddings(word2idx, vectors, target_vocab, **kwargs):
 
 
 def get_embeddings(glove_embeddings):
-    """
-    Return pre-trained embedding data to the neural network pipeline.
+    """Return pre-trained embedding data to the neural network pipeline.
 
     :param glove_embeddings: A dict of GloVe embeddings
     :return: Return a 3-Tuple of GloVe embeddings :
@@ -121,8 +120,7 @@ def get_embeddings(glove_embeddings):
 
 
 def get_torch_glove(torch_glove_type):
-    """
-    A helper function to user torchnlp built-in glove getter.
+    """A helper function to user torchnlp built-in glove getter.
 
     :param torch_glove_type: a string, name of GloVe embedding
     :return: bool, whether the get operation workd.
@@ -158,8 +156,7 @@ def get_torch_glove(torch_glove_type):
 
 
 def download_embeddings(url, unzip_path):
-    """
-    Get and process GloVe embeddings.
+    """Get and process GloVe embeddings.
 
     :param url: The target URL, see constants.py for urls to GloVe downloads.
     :param unzip_path: The full path to unzip GloVe downloads to.
@@ -220,8 +217,7 @@ def download_embeddings(url, unzip_path):
 
 
 def write_pickle(directory, unzip_path):
-    """
-    Write dictionaries to pickled files if the provided directory does not already have pickle files.
+    """Write dictionaries to pickled files if the provided directory does not already have pickle files.
 
     :param directory: A dictionary of word embeddings.
     :param unzip_path: Full path to file locations.
@@ -259,8 +255,7 @@ def write_pickle(directory, unzip_path):
 
 
 def parse_embedding_pickle(embedding_file_path):
-    """
-    Read pickled embedding files from disk.
+    """Read pickled embedding files from disk.
 
     :param embedding_file_path: string, full path to the embedding txt file
     :return: a dictionary of embeddings k: word (string), v: embedding vector of float32s (numpy array)
@@ -282,8 +277,7 @@ def parse_embedding_pickle(embedding_file_path):
 
 
 def parse_embedding_txt(embedding_file_path):
-    """
-    Read text embedding files from disk.
+    """Read text embedding files from disk.
 
     :param embedding_file_path: string, full path to the embedding txt file
     :return: a dictionary of embeddings k: word (string), v: embedding vector of float32s (numpy array)
@@ -305,8 +299,8 @@ def parse_embedding_txt(embedding_file_path):
 
 
 def get_num_lines(file_path):
-    """
-    A helper function to count number of lines in a given text file.
+    """A helper function to count number of lines in a given text file.
+
     :param file_path: full path to some .txt file.
     :return: integer, count of lines in a .txt file.
 
@@ -322,8 +316,7 @@ def get_num_lines(file_path):
 
 
 def read_line(line, embedding_dim):
-    """
-    Read lines in a text file from embeddings.
+    """Read lines in a text file from embeddings.
 
     :param line: Each line of a text open object.
     :param embedding_dim: the expected vector dimension
@@ -354,8 +347,7 @@ def read_line(line, embedding_dim):
 
 
 def return_repeating_word(values):
-    """
-    A helper function for read_line().
+    """A helper function for read_line().
 
     Address issues where word has repeating chargers, return them as a single word.
 

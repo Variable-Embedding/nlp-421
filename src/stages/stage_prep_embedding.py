@@ -8,8 +8,7 @@ from src.util.constants import *
 
 
 def stage_prep_embedding(embedding_type, target_glove=None):
-    """
-    Download and prepare GloVe embeddings for modeling.
+    """Download and prepare GloVe embeddings for modeling.
 
     :param embedding_type: string, a key name for a type of GloVe embedding to download and prep
            embedding_type is one of:

@@ -7,8 +7,8 @@ import time
 
 
 def stage_prep_corpus(corpus_type):
-    """
-    Manage all functions to process a target corpus, return a vocabulary for now.
+    """Manage all functions to process a target corpus, return a vocabulary for now.
+
     :return: A list of words representing all the unique words in a corpus, i.e. the vocabulary.
     """
 
