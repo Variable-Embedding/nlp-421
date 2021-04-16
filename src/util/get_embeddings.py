@@ -14,6 +14,7 @@ from tqdm import tqdm
 import torch.nn as nn
 from src.util.spinning_cursor import Spinner
 
+
 def random_embedding_vector(embedding_dim, scale=0.6):
     """A helper function to return a randomized embedding space of dimension embedding_dim
 
@@ -24,7 +25,7 @@ def random_embedding_vector(embedding_dim, scale=0.6):
     return np.random.normal(scale=scale, size=(embedding_dim,))
 
 
-def prep_nn_embeddings(vectors, non_trainable=False):
+def prep_embedding_layer(vectors, non_trainable=False):
     """A helper function to return pytorch nn embedding layer.
 
     :param vectors: weight matrix of pre-trained or randomized vectors
@@ -36,20 +37,20 @@ def prep_nn_embeddings(vectors, non_trainable=False):
 
     num_embeddings, embedding_dim = vectors.size()
 
-    emb_layer = nn.Embedding(num_embeddings, embedding_dim)
-    emb_layer.load_state_dict({'weight': vectors})
+    embedding_layer = nn.Embedding(num_embeddings, embedding_dim)
+    embedding_layer.load_state_dict({'weight': vectors})
 
     if non_trainable:
-        emb_layer.weight.requires_grad = False
+        embedding_layer.weight.requires_grad = False
     else:
-        emb_layer.weight.requires_grad = True
+        embedding_layer.weight.requires_grad = True
 
     logging.info(f'Prepared embedding layer for pytorch nn, set trainable to {non_trainable}, '
                  f'to switch this, set prep_nn_embeddings(non_trainable=True).'
-                 f'\n returning emb_layer ({type(emb_layer)}), num_embeddings ({num_embeddings})'
+                 f'\n returning emb_layer ({type(embedding_layer)}), num_embeddings ({num_embeddings})'
                  f', and embedding_dim ({embedding_dim}).')
 
-    return emb_layer, num_embeddings, embedding_dim
+    return embedding_layer
 
 
 def prep_corpus_embeddings(word2idx, vectors, target_vocab, **kwargs):
@@ -84,8 +85,6 @@ def prep_corpus_embeddings(word2idx, vectors, target_vocab, **kwargs):
     logging.info('Out of {} total words, found {} words in the pre-trained model,'
                  ' {} words initialized randomly.'.format(len(target_vocab), words_found, remainder))
     logging.info('Returning {} vocabulary embeddings for nn training.'.format(len(word2idx_new)))
-
-    # embeddings = {"word2idx": word2idx_new, "idx2word": idx2word_new, "vectors": vectors_new}
 
     return word2idx_new, idx2word_new, vectors_new
 

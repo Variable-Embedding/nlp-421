@@ -1,6 +1,6 @@
 from src.stages.stage_prep_corpus import stage_prep_corpus
 from src.stages.stage_prep_embedding import stage_prep_embedding
-from src.util.get_embeddings import prep_corpus_embeddings
+from src.util.get_embeddings import prep_corpus_embeddings, prep_embedding_layer
 from src.util.constants import *
 import logging
 
@@ -47,7 +47,8 @@ def run_dataprep(embedding_type, corpus_type, target_glove=None):
              , "vectors": vectors
              , "target_vocab": target_vocab}
 
-        word2idx, idx2word, embedding_layer = prep_corpus_embeddings(**x)
+        word2idx, idx2word, vectors = prep_corpus_embeddings(**x)
+        embedding_layer = prep_embedding_layer(vectors)
 
         y = {
             # word2idx -> dict of token to idx
@@ -63,7 +64,7 @@ def run_dataprep(embedding_type, corpus_type, target_glove=None):
             # dictionary_size -> int size of corpus
             , "dictionary_size": len(target_vocab)
             # embedding_size -> the embedding dim size
-            , "embedding_size": embedding_layer.size()[1]
+            , "embedding_size": vectors.size()[1]
              }
 
         nn_data.update({data_set: y})

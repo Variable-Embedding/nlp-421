@@ -65,11 +65,11 @@ class Model(nn.Module):
         # a default embedding layer
         self.embedding = nn.Embedding(dictionary_size, embedding_size)
 
-        # Set initial weights.
+        # initialize parameters and weights
         for param in self.parameters():
             nn.init.uniform_(param, -max_init_param, max_init_param)
         # if provided, override embedding layer with pre-trained
-        if embedding_layer:
+        if embedding_layer is not None:
             self.embedding = embedding_layer
 
         if model_type == 'lstm':
@@ -80,7 +80,6 @@ class Model(nn.Module):
         else:
             #TODO: we can do other types like transformer here
             transformer = 0
-
 
         self.dropout = nn.Dropout(dropout_probability)
 
