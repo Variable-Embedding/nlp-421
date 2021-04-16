@@ -27,9 +27,10 @@ class Model(nn.Module):
                  , dictionary_size
                  , embedding_size
                  , embedding_layer=None
-                 , number_of_layers=2
+                 , num_layers=2
                  , dropout_probability=0.5
                  , batch_size=64
+                 , hidden_size=None
                  , sequence_length=30
                  , max_norm=2
                  , max_init_param=0.01
@@ -43,11 +44,14 @@ class Model(nn.Module):
         super().__init__()
         self.dictionary_size = dictionary_size
         self.embedding_size = embedding_size
-        self.number_of_layers = number_of_layers
+        self.hidden_size = embedding_size if hidden_size is None else hidden_size
+        self.hidden = None
+        self.num_layers = num_layers
         self.batch_size = batch_size
         self.sequence_length = sequence_length
         self.max_norm = max_norm
         self.max_init_param = max_init_param
+        self.lstm_configuration = lstm_configuration
 
         if sequence_step_size is None:
             self.sequence_step_size = sequence_length
@@ -60,36 +64,47 @@ class Model(nn.Module):
             self.device = torch.device("cpu")
 
         # if only one layer, force dropout probability to 1 (none)
-        if number_of_layers == 1 and dropout_probability > 0:
+        if num_layers == 1 and dropout_probability > 0:
             dropout_probability = 1
-        # a default embedding layer
-        self.embedding = nn.Embedding(dictionary_size, embedding_size)
-
-        # initialize parameters and weights
-        for param in self.parameters():
-            nn.init.uniform_(param, -max_init_param, max_init_param)
-        # if provided, override embedding layer with pre-trained
-        if embedding_layer is not None:
-            self.embedding = embedding_layer
-
-        if model_type == 'lstm':
-            self.lstm = LSTM(self.embedding_size
-                             , number_of_layers
-                             , dropout_probability
-                             , lstm_configuration)
-        else:
-            #TODO: we can do other types like transformer here
-            transformer = 0
 
         self.dropout = nn.Dropout(dropout_probability)
 
+        for param in self.parameters():
+            print(param)
+            nn.init.uniform_(param, -max_init_param, max_init_param)
+
+        # if provided, override embedding layer with pre-trained
+        if embedding_layer is not None:
+            self.embedding = embedding_layer
+        else:
+            # a default embedding layer
+            self.embedding = nn.Embedding(dictionary_size, embedding_size)
+
+            # initialize parameters and weights
+            # for param in self.parameters():
+            #     nn.init.uniform_(param, -max_init_param, max_init_param)
+
+        if model_type == 'lstm':
+            self.lstm = LSTM(embedding_size=self.embedding_size
+                             , hidden_size=self.hidden_size
+                             , num_layers=num_layers
+                             , dropout_probability=dropout_probability
+                             , lstm_configuration=lstm_configuration)
+        else:
+            #TODO: we can do other types like transformer here
+            self.transformer = 'call transformer class here'
+
+    def init_hidden(self):
+        # initialize hidden states
+        self.hidden = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=self.device),
+                       torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=self.device))
+
     def forward(self, X, states=None):
         X = self.embedding(X)
-        # TODO: confirm where to do dropout, when, etc.
         X = self.dropout(X)
         X, states = self.lstm(X, states)
         X = self.dropout(X)
-        # X = self.pre_output(X)
+
         output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
         return output, states
 
@@ -97,7 +112,8 @@ class Model(nn.Module):
 class LSTM(nn.Module):
     def __init__(self
                  , embedding_size
-                 , number_of_layers
+                 , hidden_size
+                 , num_layers
                  , dropout_probability
                  , lstm_configuration
                  ):
@@ -122,8 +138,8 @@ class LSTM(nn.Module):
         self.configuration = configurations[lstm_configuration]
 
         self.lstm = nn.LSTM(input_size=embedding_size
-                            , hidden_size=embedding_size
-                            , num_layers=number_of_layers
+                            , hidden_size=hidden_size
+                            , num_layers=num_layers
                             , dropout=dropout_probability
                             )
 
@@ -133,36 +149,4 @@ class LSTM(nn.Module):
         if self.configuration == 0:
             X = self.dropout(X)
             X, states = self.lstm(X, states)
-
         return X, states
-
-
-def generate_initial_states(model, batch_size=None):
-    """Helper function to generate initial state needed for the model.forward function
-
-    Args:
-        model: model for which the states are initialized.
-        batch_size: the batch size for states. If None will use model.batch_size.
-
-    Returns:
-        A list of tuples of torch.array.
-    """
-    if batch_size is None:
-        batch_size = model.batch_size
-
-    return (torch.zeros(model.number_of_layers, batch_size, model.embedding_size,
-                        device=model.device),
-            torch.zeros(model.number_of_layers, batch_size, model.embedding_size,
-                        device=model.device))
-
-def detach_states(states):
-    """Helper function for detaching the states.
-
-    Args:
-        states: states to detach.
-
-    Returns:
-        List of detached states.
-    """
-    h, c = states
-    return (h.detach(), c.detach())

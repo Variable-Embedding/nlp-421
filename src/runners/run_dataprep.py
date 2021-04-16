@@ -3,7 +3,7 @@ from src.stages.stage_prep_embedding import stage_prep_embedding
 from src.util.get_embeddings import prep_corpus_embeddings, prep_embedding_layer
 from src.util.constants import *
 import logging
-
+import numpy as np
 
 def run_dataprep(embedding_type, corpus_type, target_glove=None):
     """Run data prep functions for embedding and corpra.
@@ -16,10 +16,10 @@ def run_dataprep(embedding_type, corpus_type, target_glove=None):
              , "embedding_layer": embedding_layer
             # target_vocab -> list of tokens
              , "target_vocab": target_vocab
-            # vocabulary -> torchtext Vocab object
-             , "vocabulary": vocab
+            # vocab -> torchtext Vocab object
+             , "vocab": vocab
             # the numeric representation of corpus, in original sequence
-             , "corpus": corpus
+             , "tokens": tokens
             # dictionary_size -> int size of corpus
             , "dictionary_size": len(target_vocab)
             # embedding_size -> the embedding dim size
@@ -36,7 +36,7 @@ def run_dataprep(embedding_type, corpus_type, target_glove=None):
 
     for data_set in data_sets:
         vocab = vocabulary[data_set]
-        corpus = corpra[data_set]
+        tokens = np.asarray(corpra[data_set])
         vectors = embeddings["vectors"]
         # torchtext.vocab.Vocab.stoi -> dict of token string to numeric id
         word2idx = vocab.stoi
@@ -48,7 +48,7 @@ def run_dataprep(embedding_type, corpus_type, target_glove=None):
              , "target_vocab": target_vocab}
 
         word2idx, idx2word, vectors = prep_corpus_embeddings(**x)
-        embedding_layer = prep_embedding_layer(vectors)
+        embedding_layer = prep_embedding_layer(vectors, tokens)
 
         y = {
             # word2idx -> dict of token to idx
@@ -58,9 +58,9 @@ def run_dataprep(embedding_type, corpus_type, target_glove=None):
             # target_vocab -> list of tokens
             , "target_vocab": target_vocab
             # vocabulary -> torchtext Vocab object
-            , "vocabulary": vocab
+            , "vocab": vocab
             # the numeric representation of corpus, in original sequence
-            , "corpus": corpus
+            , "tokens": tokens
             # dictionary_size -> int size of corpus
             , "dictionary_size": len(target_vocab)
             # embedding_size -> the embedding dim size

@@ -80,6 +80,8 @@ def make_torch_corpra(torch_text_path, corpus_type, vocabulary):
                 c = text_pipeline(line)
                 corpus.extend(c)
 
+            corpus = torch.tensor(corpus, dtype=torch.long)
+
             corpra.update({key: corpus})
 
             f.close()

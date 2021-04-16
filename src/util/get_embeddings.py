@@ -25,7 +25,7 @@ def random_embedding_vector(embedding_dim, scale=0.6):
     return np.random.normal(scale=scale, size=(embedding_dim,))
 
 
-def prep_embedding_layer(vectors, non_trainable=False):
+def prep_embedding_layer(vectors, tokens, non_trainable=False):
     """A helper function to return pytorch nn embedding layer.
 
     :param vectors: weight matrix of pre-trained or randomized vectors
