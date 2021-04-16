@@ -25,8 +25,8 @@ class Model(nn.Module):
 
     def __init__(self
                  , dictionary_size
-                 , embedding_layer
                  , embedding_size
+                 , embedding_layer=None
                  , number_of_layers=2
                  , dropout_probability=0.5
                  , batch_size=64
@@ -41,7 +41,6 @@ class Model(nn.Module):
 
         super().__init__()
         self.dictionary_size = dictionary_size
-        self.embedding = embedding_layer
         self.embedding_size = embedding_size
         self.number_of_layers = number_of_layers
         self.batch_size = batch_size
@@ -63,6 +62,14 @@ class Model(nn.Module):
         if number_of_layers == 1 and dropout_probability > 0:
             dropout_probability = 1
 
+        if embedding_layer:
+            self.embedding = embedding_layer
+        else:
+            self.embedding = nn.Embedding(dictionary_size, embedding_size)
+            # Set initial weights.
+            for param in self.parameters():
+                nn.init.uniform_(param, -max_init_param, max_init_param)
+
         self.lstm = LSTM(self.embedding_size
                          , number_of_layers
                          , dropout_probability
@@ -70,13 +77,15 @@ class Model(nn.Module):
 
         self.dropout = nn.Dropout(dropout_probability)
 
-        self.gru = nn.GRU(self.embedding_size, self.hidden_size, self.number_of_layers, batch_first=True)
+    def forward(self, X, states=None):
+        X = self.embedding(X)
+        X = self.dropout(X)
+        X, states = self.lstm(X, states)
+        X = self.dropout(X)
+        # X = self.pre_output(X)
+        output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
+        return output, states
 
-    def forward(self, inp, hidden):
-        return self.gru(self.embedding(inp), self.hidden_size)
-
-    def init_hidden(self, batch_size):
-        return Variable(torch.zeros(self.number_of_layers, batch_size, self.hidden_size))
 
 
 class LSTM(nn.Module):
@@ -120,3 +129,34 @@ class LSTM(nn.Module):
             X, states = self.lstm(X, states)
 
         return X, states
+
+
+def generate_initial_states(model, batch_size=None):
+    """Helper function to generate initial state needed for the model.forward function
+
+    Args:
+        model: model for which the states are initialized.
+        batch_size: the batch size for states. If None will use model.batch_size.
+
+    Returns:
+        A list of tuples of torch.array.
+    """
+    if batch_size is None:
+        batch_size = model.batch_size
+
+    return (torch.zeros(model.number_of_layers, batch_size, model.embedding_size,
+                        device=model.device),
+            torch.zeros(model.number_of_layers, batch_size, model.embedding_size,
+                        device=model.device))
+
+def detach_states(states):
+    """Helper function for detaching the states.
+
+    Args:
+        states: states to detach.
+
+    Returns:
+        List of detached states.
+    """
+    h, c = states
+    return (h.detach(), c.detach())
