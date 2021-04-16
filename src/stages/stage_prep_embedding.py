@@ -16,8 +16,7 @@ def stage_prep_embedding(embedding_type, target_glove=None):
                 "glove_common_crawl"
                 or "840B" which is the same as glove_common_crawl
     :param target_glove: string, optional. If passed, returns embedding dictionaries of the target GloVe.
-    :param embedding_dim: default embedding dimensions to 300 (needs more work here for other emebddings).
-    :return: default None
+    :return: dict of embedding -> {"word2idx": word2idx, "idx2word": idx2word, "vectors": vectors}
     """
     # make directory for specified embedding data
 

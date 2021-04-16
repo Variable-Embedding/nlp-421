@@ -11,21 +11,25 @@ def run_dataprep(embedding_type, corpus_type, target_glove=None):
     :returns: a dictionary of data keyed by phases: 'train', 'valid', 'test'
            {
             # word2idx -> dict of token to idx
-            "word2idx": word2idx
-            # vectors -> torch tensor embedding layer
-             , "vectors": vectors
+               "word2idx": word2idx
+            # torch tensor embedding layer
+             , "embedding_layer": embedding_layer
             # target_vocab -> list of tokens
              , "target_vocab": target_vocab
             # vocabulary -> torchtext Vocab object
              , "vocabulary": vocab
-            # corpus -> the numeric representation of corpus, in original corpus sequence
+            # the numeric representation of corpus, in original sequence
              , "corpus": corpus
+            # dictionary_size -> int size of corpus
+            , "dictionary_size": len(target_vocab)
+            # embedding_size -> the embedding dim size
+            , "embedding_size": embedding_layer.size()[1]
              }
     """
     # pre-trained embedding -> {"word2idx": word2idx, "idx2word": idx2word, "vectors": vectors}
     embeddings = stage_prep_embedding(embedding_type=embedding_type, target_glove=target_glove)
     vocabulary, corpra = stage_prep_corpus(corpus_type)
-    # data_sets -> 'train', 'valid', 'test'
+    # data_sets -> ['train', 'valid', 'test']
     data_sets = vocabulary.keys()
 
     nn_data = {}
@@ -43,19 +47,23 @@ def run_dataprep(embedding_type, corpus_type, target_glove=None):
              , "vectors": vectors
              , "target_vocab": target_vocab}
 
-        word2idx, idx2word, vectors = prep_corpus_embeddings(**x)
+        word2idx, idx2word, embedding_layer = prep_corpus_embeddings(**x)
 
         y = {
             # word2idx -> dict of token to idx
             "word2idx": word2idx
             # torch tensor embedding layer
-             , "vectors": vectors
+            , "embedding_layer": embedding_layer
             # target_vocab -> list of tokens
-             , "target_vocab": target_vocab
+            , "target_vocab": target_vocab
             # vocabulary -> torchtext Vocab object
-             , "vocabulary": vocab
+            , "vocabulary": vocab
             # the numeric representation of corpus, in original sequence
-             , "corpus": corpus
+            , "corpus": corpus
+            # dictionary_size -> int size of corpus
+            , "dictionary_size": len(target_vocab)
+            # embedding_size -> the embedding dim size
+            , "embedding_size": embedding_layer.size()[1]
              }
 
         nn_data.update({data_set: y})

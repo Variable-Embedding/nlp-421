@@ -24,18 +24,19 @@ class Model(nn.Module):
     """
 
     def __init__(self
-               , dictionary_size
-               , embedding_layer
-               , embedding_size
-               , number_of_layers=2
-               , dropout_probability=0.5
-               , batch_size=64
-               , sequence_length=30
-               , max_norm=2
-               , max_init_param=0.01
-               , device="cpu"
-               , sequence_step_size=None
-               , lstm_configuration="default"
+                 , dictionary_size
+                 , embedding_layer
+                 , embedding_size
+                 , number_of_layers=2
+                 , dropout_probability=0.5
+                 , batch_size=64
+                 , sequence_length=30
+                 , max_norm=2
+                 , max_init_param=0.01
+                 , device="cpu"
+                 , sequence_step_size=None
+                 , lstm_configuration="default"
+                 , **kwargs
                  ):
 
         super().__init__()
@@ -99,7 +100,7 @@ class LSTM(nn.Module):
         super().__init__()
         configurations = {
             "default": 0
-            }
+        }
 
         self.configuration = configurations[lstm_configuration]
 

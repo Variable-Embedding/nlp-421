@@ -31,12 +31,13 @@ class Test(TestCase):
             word2idx = data["word2idx"]
             a_common_tokens_idx = word2idx[a_common_token]
             target_vocab = data["target_vocab"]
-            vector = data["vectors"]
-            a_common_tokens_vector = vector[a_common_tokens_idx]
+            embedding_layer = data["embedding_layer"]
+            a_common_tokens_vector = embedding_layer[a_common_tokens_idx]
 
             vectors.append(a_common_tokens_vector)
 
             self.assertEqual(a_common_token, target_vocab[a_common_tokens_idx])
+            self.assertEqual(len(target_vocab), embedding_layer.size()[0])
 
         self.assertEqual(vectors[0].all(), vectors[1].all())
         self.assertEqual(vectors[1].all(), vectors[2].all())
