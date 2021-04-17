@@ -31,7 +31,7 @@ class Model(nn.Module):
                  , dropout_probability=.1
                  , batch_size=16
                  , hidden_size=None
-                 , sequence_length=30
+                 , sequence_length=16
                  , max_norm=2
                  , max_init_param=0.01
                  , device="cpu"
@@ -69,7 +69,6 @@ class Model(nn.Module):
 
         self.dropout = nn.Dropout(dropout_probability)
 
-        # randomly initialize parameters
         for param in self.parameters():
             nn.init.uniform_(param, -max_init_param, max_init_param)
 
@@ -80,6 +79,10 @@ class Model(nn.Module):
             # a default embedding layer
             self.embedding = nn.Embedding(dictionary_size, embedding_size)
 
+            # initialize parameters and weights
+            # for param in self.parameters():
+            #     nn.init.uniform_(param, -max_init_param, max_init_param)
+
         if model_type == 'lstm':
             self.lstm = LSTM(embedding_size=self.embedding_size
                              , hidden_size=self.hidden_size
@@ -87,7 +90,7 @@ class Model(nn.Module):
                              , dropout_probability=dropout_probability
                              , lstm_configuration=lstm_configuration)
         else:
-            # TODO: we can do other types like transformer here
+            #TODO: we can do other types like transformer here
             self.transformer = 'call transformer class here'
 
     def init_hidden(self):
@@ -97,13 +100,11 @@ class Model(nn.Module):
 
     def forward(self, X):
         X = self.embedding(X)
-        # TODO: We need dropout here?
-        # X = self.dropout(X)
+        X = self.dropout(X)
         X, self.hidden = self.lstm(X, self.hidden)
-        # TODO: We need dropout here?
-        # X = self.dropout(X)
-
+        h_squeezed = self.hidden[0].squeeze(0)
         output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
+
         return output
 
 
@@ -145,7 +146,6 @@ class LSTM(nn.Module):
 
     def forward(self, X, states=None):
         if self.configuration == 0:
-            # TODO: We need dropout here?
             X = self.dropout(X)
             X, states = self.lstm(X, states)
         return X, states

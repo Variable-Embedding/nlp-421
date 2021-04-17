@@ -56,10 +56,12 @@ def train_epoch(model, train_dataloader, epoch, learning_rate=1, learning_rate_d
         output = model(x)
         output = output.to(model.device)
         loss = loss_function(output, y)
-
         batch_loss = loss.item() / model.batch_size
-        epoch_progress.set_description('EPOCH: {} - Loss: {:.2f}'.format(epoch, batch_loss))
-        epoch_progress.refresh()
+
+        if idx % 10 == 0:
+            epoch_progress.set_description('EPOCH: {} - Loss: {:.2f}'.format(epoch, batch_loss))
+            epoch_progress.refresh()
+
         epoch_loss.append(batch_loss)
         loss.backward()
 
