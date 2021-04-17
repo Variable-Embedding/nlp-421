@@ -5,8 +5,10 @@ from src.util.constants import *
 import logging
 import numpy as np
 
-def run_dataprep(embedding_type, corpus_type, target_glove=None):
+
+def run_dataprep(embedding_type, corpus_type, target_glove=None, min_freq=None):
     """Run data prep functions for embedding and corpra.
+
 
     :returns: a dictionary of data keyed by phases: 'train', 'valid', 'test'
            {
@@ -28,7 +30,7 @@ def run_dataprep(embedding_type, corpus_type, target_glove=None):
     """
     # pre-trained embedding -> {"word2idx": word2idx, "idx2word": idx2word, "vectors": vectors}
     embeddings = stage_prep_embedding(embedding_type=embedding_type, target_glove=target_glove)
-    vocabulary, corpra = stage_prep_corpus(corpus_type)
+    vocabulary, corpra = stage_prep_corpus(corpus_type, min_freq=min_freq)
     # data_sets -> ['train', 'valid', 'test']
     data_sets = vocabulary.keys()
 

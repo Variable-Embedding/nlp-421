@@ -27,11 +27,9 @@ class Model(nn.Module):
                  , dictionary_size
                  , embedding_size
                  , embedding_layer=None
-                 , num_layers=3
+                 , num_layers=2
                  , dropout_probability=.5
-                 # FIXME: Dimension error if batch_size != sequence_length
                  , batch_size=64
-                 # FIXME: Dimension error if hidden_size != batch_size
                  , hidden_size=None
                  , sequence_length=16
                  , max_norm=2

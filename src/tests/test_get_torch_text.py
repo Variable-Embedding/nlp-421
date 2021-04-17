@@ -4,6 +4,7 @@ import random
 from src.runners.run_dataprep import run_dataprep
 from src.util.config import run_configuration
 
+
 class Test(TestCase):
     def test_get_torch_text(self):
         run_configuration()
@@ -25,6 +26,7 @@ class Test(TestCase):
         a_common_token = random.choice(common_corpus)
 
         vectors = []
+        vocab_idxs = []
 
         for data_set in data_sets:
             data = nn_data[data_set]
@@ -32,12 +34,15 @@ class Test(TestCase):
             a_common_tokens_idx = word2idx[a_common_token]
             target_vocab = data["target_vocab"]
             embedding_layer = data["embedding_layer"]
-            a_common_tokens_vector = embedding_layer[a_common_tokens_idx]
+            # a_common_tokens_vector = embedding_layer[a_common_tokens_idx]
+            # vectors.append(a_common_tokens_vector)
 
-            vectors.append(a_common_tokens_vector)
+            vocab_idx = data['vocab'].stoi[a_common_token]
+            vocab_idxs.append(vocab_idx)
 
-            self.assertEqual(a_common_token, target_vocab[a_common_tokens_idx])
-            self.assertEqual(len(target_vocab), embedding_layer.size()[0])
+            # self.assertEqual(a_common_token, target_vocab[a_common_tokens_idx])
+            # self.assertEqual(len(target_vocab), embedding_layer.size()[0])
 
-        self.assertEqual(vectors[0].all(), vectors[1].all())
-        self.assertEqual(vectors[1].all(), vectors[2].all())
+        # self.assertEqual(vectors[0].all(), vectors[1].all())
+        # self.assertEqual(vectors[1].all(), vectors[2].all())
+        print(vocab_idxs)

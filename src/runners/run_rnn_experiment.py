@@ -62,7 +62,7 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
             epoch_progress.set_description('EPOCH: {} - Start Perplexity: {}'.format(curr_epoch, np.exp(batch_loss)))
             epoch_progress.refresh()
 
-        if idx % 100 == 0:
+        if idx % 10 == 0:
             epoch_progress.set_description('EPOCH: {} - Loss: {:.2f}'.format(curr_epoch, batch_loss))
             epoch_progress.refresh()
 

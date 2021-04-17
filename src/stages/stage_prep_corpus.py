@@ -6,7 +6,7 @@ import string
 import time
 
 
-def stage_prep_corpus(corpus_type):
+def stage_prep_corpus(corpus_type, min_freq=None):
     """Manage all functions to process a target corpus, return a vocabulary for now.
 
     :return: A list of words representing all the unique words in a corpus, i.e. the vocabulary.
@@ -14,6 +14,6 @@ def stage_prep_corpus(corpus_type):
 
     if corpus_type == "WikiText2":
 
-        vocabulary, corpra = get_torch_text(corpus_type=corpus_type)
+        vocabulary, corpra = get_torch_text(corpus_type=corpus_type, min_freq=min_freq)
 
         return vocabulary, corpra
