@@ -28,7 +28,7 @@ class Model(nn.Module):
                  , embedding_size
                  , embedding_layer=None
                  , num_layers=2
-                 , dropout_probability=0.5
+                 , dropout_probability=.1
                  , batch_size=16
                  , hidden_size=None
                  , sequence_length=30
@@ -69,8 +69,8 @@ class Model(nn.Module):
 
         self.dropout = nn.Dropout(dropout_probability)
 
+        # randomly initialize parameters
         for param in self.parameters():
-            print(param)
             nn.init.uniform_(param, -max_init_param, max_init_param)
 
         # if provided, override embedding layer with pre-trained
@@ -80,10 +80,6 @@ class Model(nn.Module):
             # a default embedding layer
             self.embedding = nn.Embedding(dictionary_size, embedding_size)
 
-            # initialize parameters and weights
-            # for param in self.parameters():
-            #     nn.init.uniform_(param, -max_init_param, max_init_param)
-
         if model_type == 'lstm':
             self.lstm = LSTM(embedding_size=self.embedding_size
                              , hidden_size=self.hidden_size
@@ -91,7 +87,7 @@ class Model(nn.Module):
                              , dropout_probability=dropout_probability
                              , lstm_configuration=lstm_configuration)
         else:
-            #TODO: we can do other types like transformer here
+            # TODO: we can do other types like transformer here
             self.transformer = 'call transformer class here'
 
     def init_hidden(self):
@@ -99,14 +95,16 @@ class Model(nn.Module):
         self.hidden = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=self.device),
                        torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=self.device))
 
-    def forward(self, X, states=None):
+    def forward(self, X):
         X = self.embedding(X)
-        X = self.dropout(X)
-        X, states = self.lstm(X, states)
-        X = self.dropout(X)
+        # TODO: We need dropout here?
+        # X = self.dropout(X)
+        X, self.hidden = self.lstm(X, self.hidden)
+        # TODO: We need dropout here?
+        # X = self.dropout(X)
 
         output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
-        return output, states
+        return output
 
 
 class LSTM(nn.Module):
@@ -147,6 +145,7 @@ class LSTM(nn.Module):
 
     def forward(self, X, states=None):
         if self.configuration == 0:
+            # TODO: We need dropout here?
             X = self.dropout(X)
             X, states = self.lstm(X, states)
         return X, states
