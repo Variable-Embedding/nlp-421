@@ -9,6 +9,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
+
 def run_rnn_experiment(epochs=1, **nn_data):
     """
     """
@@ -90,6 +91,7 @@ def generate_initial_states(model, batch_size=None):
     return (torch.zeros(model.num_layers, batch_size, model.embedding_size, device=model.device),
             torch.zeros(model.num_layers, batch_size, model.embedding_size, device=model.device))
 
+
 def detach_states(states):
     """Helper function for detaching the states.
 
@@ -101,6 +103,7 @@ def detach_states(states):
     """
     h, c = states
     return (h.detach(), c.detach())
+
 
 class LanguageModelSequence(Dataset):
     def __init__(self, model, data, sequence_length=None, sequence_step_size=None):
