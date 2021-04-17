@@ -73,6 +73,7 @@ class Model(nn.Module):
 
         self.dropout = nn.Dropout(dropout_probability)
 
+        # initialize parameters and weights
         for param in self.parameters():
             nn.init.uniform_(param, -max_init_param, max_init_param)
 
@@ -82,10 +83,6 @@ class Model(nn.Module):
         else:
             # a default embedding layer
             self.embedding = nn.Embedding(dictionary_size, embedding_size)
-
-            # initialize parameters and weights
-            # for param in self.parameters():
-            #     nn.init.uniform_(param, -max_init_param, max_init_param)
 
         if model_type == 'lstm':
             self.lstm = LSTM(embedding_size=self.embedding_size
@@ -100,7 +97,7 @@ class Model(nn.Module):
     def init_hidden(self):
         # initialize hidden states
         self.hidden_states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=self.device),
-                       torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=self.device))
+                              torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=self.device))
 
     def forward(self, x):
         x = self.embedding(x)
