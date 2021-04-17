@@ -83,7 +83,9 @@ class LanguageModelSequence(Dataset):
 
     def __getitem__(self, index):
         x = self.data[index: index + self.sequence_length]
+
         y = self.data[index + self.sequence_length: index + self.sequence_length + self.sequence_step_size]
+
         return torch.tensor(x, dtype=torch.long).to(self.model.device), torch.tensor(y, dtype=torch.long).to(self.model.device)
 
     def __len__(self):
