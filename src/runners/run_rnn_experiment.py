@@ -45,9 +45,6 @@ def run_rnn_experiment(epochs=1, **nn_data):
 def train_epoch(model, train_dataloader, epoch, learning_rate=1, learning_rate_decay=1):
     model.train()
 
-
-    # states = generate_initial_states(model)
-
     epoch_loss = []
     epoch_progress = tqdm(train_dataloader, desc=f'EPOCH: {epoch}', position=0, leave=True)
 
@@ -73,36 +70,6 @@ def train_epoch(model, train_dataloader, epoch, learning_rate=1, learning_rate_d
                 param -= lr * param.grad
 
     return epoch_loss
-
-
-def generate_initial_states(model, batch_size=None):
-    """Helper function to generate initial state needed for the model.forward function
-
-    Args:
-        model: model for which the states are initialized.
-        batch_size: the batch size for states. If None will use model.batch_size.
-
-    Returns:
-        A list of tuples of torch.array.
-    """
-    if batch_size is None:
-        batch_size = model.batch_size
-
-    return (torch.zeros(model.num_layers, batch_size, model.embedding_size, device=model.device),
-            torch.zeros(model.num_layers, batch_size, model.embedding_size, device=model.device))
-
-
-def detach_states(states):
-    """Helper function for detaching the states.
-
-    Args:
-        states: states to detach.
-
-    Returns:
-        List of detached states.
-    """
-    h, c = states
-    return (h.detach(), c.detach())
 
 
 class LanguageModelSequence(Dataset):
