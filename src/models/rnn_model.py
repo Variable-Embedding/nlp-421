@@ -27,8 +27,8 @@ class Model(nn.Module):
                  , dictionary_size
                  , embedding_size
                  , embedding_layer=None
-                 , num_layers=2
-                 , dropout_probability=.1
+                 , num_layers=3
+                 , dropout_probability=.5
                  # FIXME: Dimension error if batch_size != sequence_length
                  , batch_size=64
                  # FIXME: Dimension error if hidden_size != batch_size
@@ -37,7 +37,6 @@ class Model(nn.Module):
                  , max_norm=2
                  , max_init_param=0.01
                  , device="cpu"
-                 # see: LanguageModelSequence() in run_rnn_experiment.py
                  , sequence_step_size=None
                  , lstm_configuration="default"
                  , model_type='lstm'
