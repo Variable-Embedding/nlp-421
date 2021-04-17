@@ -24,9 +24,9 @@ def run_rnn_experiment(epochs=1, **nn_data):
 
     num_iters = report_model_parameters(model, train_data)
 
+    # TODO: fix dataloader and dataset class, use the code below with those objects
     # train_set = LanguageModelSequence(model=model, data=train_data)
     # train_dataloader = DataLoader(train_set, batch_size=model.batch_size, shuffle=False)
-    #
     # valid_set = LanguageModelSequence(model=model, data=valid_data)
     # valid_dataloader = DataLoader(valid_set, batch_size=model.batch_size, shuffle=False)
     # test_set = LanguageModelSequence(model=model, data=test_data)
@@ -42,13 +42,17 @@ def run_rnn_experiment(epochs=1, **nn_data):
     return True
 
 
-def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, learning_rate_decay=1, tokens=None, train_dataloader=None):
+def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, learning_rate_decay=1, tokens=None, train_dataloader=None, display_frequency=0.02):
     model.train()
-
+    epoch_counter = curr_epoch+1
     epoch_loss = []
     # epoch_progress = tqdm(train_dataloader, desc=f'EPOCH: {epoch}', position=0, leave=True)
+
+    display_interval = int(num_iters * display_frequency)
+    logging.info(f'Updating Statistics every {display_interval} iterations.')
+
     epoch_progress = tqdm(batch_data(tokens=tokens, model=model)
-                          , desc=f'EPOCH: {curr_epoch}', position=0, leave=True, total=num_iters * total_epochs)
+                          , desc=f'EPOCH: {epoch_counter}', position=0, leave=True, total=num_iters * total_epochs)
 
     for idx, (x, y) in enumerate(epoch_progress):
         model.init_hidden()
@@ -59,11 +63,13 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
         batch_loss = loss.item() / model.batch_size
 
         if idx == 0:
-            epoch_progress.set_description('EPOCH: {} - Start Perplexity: {}'.format(curr_epoch, np.exp(batch_loss)))
+            curr_perplexity = np.exp(batch_loss)
+            epoch_progress.set_description('EPOCH: {} - Start Perplexity: {:.2f} - Start Loss: {:.2f}'.format(epoch_counter, curr_perplexity, batch_loss))
             epoch_progress.refresh()
 
-        if idx % 10 == 0:
-            epoch_progress.set_description('EPOCH: {} - Loss: {:.2f}'.format(curr_epoch, batch_loss))
+        if idx > 0 and idx % display_interval == 0:
+            curr_perplexity = np.exp(batch_loss)
+            epoch_progress.set_description('EPOCH: {} - Curr  Perplexity: {:.2f} - Loss: {:.2f}'.format(epoch_counter, curr_perplexity, batch_loss))
             epoch_progress.refresh()
 
         epoch_loss.append(batch_loss)
@@ -82,10 +88,11 @@ def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_st
     """Helper function to batch the data.
 
     Args:
-        data: the data to batch.
+        tokens: the data to batch.
         model: the model to batch for.
         batch_size: the batch size, if None will use model.batch_size.
         sequence_step_size: the sequence step size.
+        sequence_length: length of token sequence
         shuffle: Whether to shuffle the order of sequences.
 
     Returns:
@@ -117,6 +124,7 @@ def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_st
 
 
 class LanguageModelSequence(Dataset):
+    # FIXME: Need to account for batch size when returning sequences, use batch_data() func for now.
     def __init__(self, model, data, sequence_length=None, sequence_step_size=None):
 
         self.data = data
