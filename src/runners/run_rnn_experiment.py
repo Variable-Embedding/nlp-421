@@ -17,26 +17,20 @@ def run_rnn_experiment(epochs=1, **nn_data):
     logging.info(f'Preparing experiment for {stages}.')
 
     model = Model(**nn_data['train'])
+    model.to(model.device)
 
-    train_data = nn_data['train']["tokens"]
-    valid_data = nn_data['valid']["tokens"]
-    test_data = nn_data['test']["tokens"]
+    train_data = nn_data['train']
+    valid_data = nn_data['valid']
+    test_data = nn_data['test']
 
     num_iters = report_model_parameters(model, train_data)
 
-    # TODO: fix dataloader and dataset class, use the code below with those objects
-    # train_set = LanguageModelSequence(model=model, data=train_data)
-    # train_dataloader = DataLoader(train_set, batch_size=model.batch_size, shuffle=False)
-    # valid_set = LanguageModelSequence(model=model, data=valid_data)
-    # valid_dataloader = DataLoader(valid_set, batch_size=model.batch_size, shuffle=False)
-    # test_set = LanguageModelSequence(model=model, data=test_data)
-    # test_dataloader = DataLoader(test_set, batch_size=model.batch_size, shuffle=False)
-
     logging.info('Starting Training')
     train_perplexity = []
-    total_epochs = tqdm(range(epochs), desc="Training Progress")
+    total_epochs = tqdm(range(epochs), desc="Training Progress", leave=True)
+
     for epoch in total_epochs:
-        epoch_loss = train_epoch(model=model, curr_epoch=epoch, total_epochs=epochs, tokens=train_data, num_iters=num_iters)
+        epoch_loss = train_epoch(model=model, curr_epoch=epoch, total_epochs=epochs, tokens=train_data["tokens"], num_iters=num_iters)
         train_perplexity.append(np.exp(np.mean(epoch_loss)))
 
     return True
@@ -46,13 +40,16 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
     model.train()
     epoch_counter = curr_epoch+1
     epoch_loss = []
-    # epoch_progress = tqdm(train_dataloader, desc=f'EPOCH: {epoch}', position=0, leave=True)
 
-    display_interval = int(num_iters * display_frequency)
+    if num_iters < 2000:
+        display_interval = 50
+    else:
+        display_interval = int(num_iters * display_frequency)
+
     logging.info(f'Updating Statistics every {display_interval} iterations.')
 
     epoch_progress = tqdm(batch_data(tokens=tokens, model=model)
-                          , desc=f'EPOCH: {epoch_counter}', position=0, leave=True, total=num_iters * total_epochs)
+                          , desc=f'EPOCH: {epoch_counter}', position=0, leave=False, total=num_iters * total_epochs)
 
     for idx, (x, y) in enumerate(epoch_progress):
         model.init_hidden()
