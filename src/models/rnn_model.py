@@ -30,14 +30,13 @@ class Model(nn.Module):
                  , num_layers=2
                  , dropout_probability=.1
                  # FIXME: Dimension error if batch_size != sequence_length
-                 , batch_size=16
+                 , batch_size=64
                  # FIXME: Dimension error if hidden_size != batch_size
                  , hidden_size=None
                  , sequence_length=16
                  , max_norm=2
                  , max_init_param=0.01
                  , device="cpu"
-                 # FIXME: Dimension error if sequence_step_size != sequence_length
                  # see: LanguageModelSequence() in run_rnn_experiment.py
                  , sequence_step_size=None
                  , lstm_configuration="default"
@@ -73,6 +72,9 @@ class Model(nn.Module):
 
         self.dropout = nn.Dropout(dropout_probability)
 
+        # a default embedding layer
+        self.embedding = nn.Embedding(dictionary_size, embedding_size)
+
         # initialize parameters and weights
         for param in self.parameters():
             nn.init.uniform_(param, -max_init_param, max_init_param)
@@ -80,9 +82,6 @@ class Model(nn.Module):
         # if provided, override embedding layer with pre-trained
         if embedding_layer is not None:
             self.embedding = embedding_layer
-        else:
-            # a default embedding layer
-            self.embedding = nn.Embedding(dictionary_size, embedding_size)
 
         if model_type == 'lstm':
             self.lstm = LSTM(embedding_size=self.embedding_size
@@ -96,8 +95,8 @@ class Model(nn.Module):
 
     def init_hidden(self):
         # initialize hidden states
-        self.hidden_states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=self.device),
-                              torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=self.device))
+        self.hidden_states = (torch.zeros(self.num_layers, self.batch_size, self.embedding_size, device=self.device),
+                              torch.zeros(self.num_layers, self.batch_size, self.embedding_size, device=self.device))
 
     def forward(self, x):
         x = self.embedding(x)
