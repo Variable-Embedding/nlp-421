@@ -45,7 +45,7 @@ class Model(nn.Module):
         self.dictionary_size = dictionary_size
         self.embedding_size = embedding_size
         self.hidden_size = embedding_size if hidden_size is None else hidden_size
-        self.hidden = None
+        self.hidden_states = None
         self.num_layers = num_layers
         self.batch_size = batch_size
         self.sequence_length = sequence_length
@@ -95,15 +95,14 @@ class Model(nn.Module):
 
     def init_hidden(self):
         # initialize hidden states
-        self.hidden = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=self.device),
+        self.hidden_states = (torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=self.device),
                        torch.zeros(self.num_layers, self.batch_size, self.hidden_size, device=self.device))
 
-    def forward(self, X):
-        X = self.embedding(X)
-        X = self.dropout(X)
-        X, self.hidden = self.lstm(X, self.hidden)
-        h_squeezed = self.hidden[0].squeeze(0)
-        output = torch.tensordot(X, self.embedding.weight, dims=([2], [1]))
+    def forward(self, x):
+        x = self.embedding(x)
+        x = self.dropout(x)
+        x, self.hidden_states = self.lstm(x, self.hidden_states)
+        output = torch.tensordot(x, self.embedding.weight, dims=([2], [1]))
 
         return output
 
@@ -119,7 +118,7 @@ class LSTM(nn.Module):
         """Initialization for LSTM model.
 
         :param: embedding_size: integer, required. Number of features in the embedding space.
-        :param number_of_layers: integer, required. Number of LSTM layers (for stacked-LSTM).
+        :param num_layers: integer, required. Number of LSTM layers (for stacked-LSTM).
         :param: dropout_probability: float, default to 0.5. Probability for dropping nn dropout.
         :param: lstm_configuration: the configuration of the lstm. Possible configurations:
 
@@ -144,8 +143,8 @@ class LSTM(nn.Module):
 
         self.dropout = nn.Dropout(dropout_probability)
 
-    def forward(self, X, states=None):
+    def forward(self, x, hidden_states=None):
         if self.configuration == 0:
-            X = self.dropout(X)
-            X, states = self.lstm(X, states)
-        return X, states
+            x = self.dropout(x)
+            x, hidden_states = self.lstm(x, hidden_states)
+        return x, hidden_states
