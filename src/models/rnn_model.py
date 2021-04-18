@@ -34,7 +34,7 @@ class Model(nn.Module):
                  , sequence_length=16
                  , max_norm=2
                  , max_init_param=0.01
-                 , device="cpu"
+                 , device="gpu"
                  , sequence_step_size=None
                  , lstm_configuration="default"
                  , model_type='lstm'
