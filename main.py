@@ -20,7 +20,7 @@ if __name__ == '__main__':
         run_rnn_experiment(**nn_data, enable_mp=False, device="cpu")
         run_rnn_experiment(**nn_data, enable_mp=True, device="cpu")
     else:
-        # run the experiment with and without multiprocessing
+        # run the experiment with and without multiprocessing if just CPU
         run_rnn_experiment(**nn_data, enable_mp=False)
         run_rnn_experiment(**nn_data, enable_mp=True)
 
