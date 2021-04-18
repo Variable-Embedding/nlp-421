@@ -55,6 +55,8 @@ def run_dataprep(embedding_type, corpus_type, target_glove=None, min_freq=None):
         y = {
             # word2idx -> dict of token to idx
             "word2idx": word2idx
+            # idx2word -> dict of idx to token
+            , "idx2word": idx2word
             # torch tensor embedding layer
             , "embedding_layer": embedding_layer
             # target_vocab -> list of tokens

@@ -40,7 +40,8 @@ def run_rnn_experiment(epochs=2, enable_mp=True, device="gpu", **nn_data):
     logging.info(f'===== Starting Training for {epochs}x Epochs, {model.batch_size}x batches'
                  f', {model.embedding_size} embedding size'
                  f', and {model.dictionary_size} dictionary size'
-                 f' with Device: {model.device}. =====')
+                 f' with Device: {model.device}'
+                 f' and multiprocessing set to {enable_mp}. =====')
 
     total_epochs = tqdm(range(epochs), desc="Training Progress", leave=True, position=0, total=epochs)
 
