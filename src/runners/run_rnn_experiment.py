@@ -32,19 +32,20 @@ def run_rnn_experiment(epochs=2, enable_mp=True, **nn_data):
     num_iters = report_model_parameters(model, train_data['tokens'])
     start_time = time.time()
 
-    logging.info(f'Starting Training for {epochs}x Epochs, {model.batch_size}x batches'
+    logging.info(f'===== Starting Training for {epochs}x Epochs, {model.batch_size}x batches'
                  f', {model.embedding_size} embedding size'
                  f', and {model.dictionary_size} dictionary size'
-                 f' with Device: {model.device}.')
+                 f' with Device: {model.device}. =====')
 
     total_epochs = tqdm(range(epochs), desc="Training Progress", leave=True, position=0)
 
     for epoch in total_epochs:
         train_epoch(model=model, curr_epoch=epoch, total_epochs=epochs, tokens=train_data["tokens"], num_iters=num_iters, enable_mp=enable_mp, results=results)
+
     end_time = time.time()
     elapsed_time = end_time-start_time
     display_hrs = elapsed_time / 3600
-    logging.info(f'Finished Training. Elapsed time with enable_mp={enable_mp} is {display_hrs} hours.')
+    logging.info(f'===== Finished Training. Elapsed time with enable_mp={enable_mp} is {display_hrs} hours. =====')
     logging.info(f'Results {len(results.train_records)}')
 
     return True
@@ -78,21 +79,22 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
             p.join()
 
     else:
-        _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, results)
+        _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay=learning_rate_decay, curr_epoch=curr_epoch, total_epochs=total_epochs, num_iters=num_iters, results=results)
 
 
 def _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank=None, num_procs=None, results=None):
 
     pbar_desc = f'EPOCH: {epoch_counter} - PROC: {rank}' if rank is not None else f'EPOCH: {epoch_counter}'
     total_iters = (num_iters * total_epochs) // 2 if num_procs is not None else num_iters * total_epochs
+    pbar_leave = True if rank else False
+    pbar_pos = None if rank else 0
     epoch_progress = tqdm(batch_data(tokens=tokens, model=model)
-                          , desc=pbar_desc, leave=True, total=total_iters)
+                          , desc=pbar_desc, leave=pbar_leave, total=total_iters, position=pbar_pos)
     epoch_loss = []
-
+    rank = 0 if rank is None else rank
     curr_perplexity = 0
-    counter = 0
+
     for idx, (x, y) in enumerate(epoch_progress):
-        counter += 1
 
         pid = os.getpid()
 
