@@ -13,19 +13,20 @@ from collections import defaultdict
 import os
 import time
 
-def run_rnn_experiment(epochs=2, enable_mp=True, **nn_data):
+def run_rnn_experiment(epochs=2, enable_mp=True, device="gpu", **nn_data):
     """A function wrapper to execute training.
     :param epochs: integer, number of iterations to run.
     :param enable_mp: bool, default to True. whether to enable multiprocessing
+    :param device: string, default to "gpu" but only runs on gpu if detected, else "cpu".
     :param nn_data: a dict of data containing required data elements for nn training.
-    :return: True if function completes. 
+    :return: True if function completes.
     """
     results = Results()
 
     stages = nn_data.keys()
     logging.info(f'Preparing experiment for {stages}.')
 
-    model = Model(**nn_data['train'])
+    model = Model(**nn_data['train'], device=device)
     model.to(model.device)
 
     train_data = nn_data['train']
