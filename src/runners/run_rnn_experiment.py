@@ -37,11 +37,11 @@ def run_rnn_experiment(epochs=2, enable_mp=True, device="gpu", **nn_data):
     num_iters = report_model_parameters(model=model, tokens=train_data['tokens'])
     start_time = time.time()
 
-    logging.info(f'===== Starting Training for {epochs}x Epochs, {model.batch_size}x batches'
+    logging.info(f'***** Starting Training for {epochs}x Epochs, {model.batch_size}x batches'
                  f', {model.embedding_size} embedding size'
                  f', and {model.dictionary_size} dictionary size'
                  f' with Device: {model.device}'
-                 f' and multiprocessing set to {enable_mp}. =====')
+                 f' and multiprocessing set to {enable_mp}. *****')
 
     total_epochs = tqdm(range(epochs), desc="Training Progress", leave=True, position=0, total=epochs)
 
@@ -52,7 +52,9 @@ def run_rnn_experiment(epochs=2, enable_mp=True, device="gpu", **nn_data):
     elapsed_time = end_time-start_time
     display_hrs = elapsed_time / 3600
     logging.info(f'===== Finished Training. '
-                 f'Elapsed time with enable_mp={enable_mp} is {round(display_hrs, 4)} hours. =====')
+                 f'Elapsed time with enable_mp = {enable_mp} '
+                 f'with device set to {model.device}'
+                 f' is {round(display_hrs, 4)} hours. =====\n')
     # FIXME: Configure results class to capture training statistics.
     # logging.info(f'Results {len(results.train_records)}')
 
@@ -65,7 +67,7 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
     :param model: The PyTorch model class.
     :param curr_epoch: integer, the current epoch.
     :param total_epochs: integer, max number of epochs to train.
-    :param num_iters: integer, estimated number of iterations based on tokens and batch size.
+    :param num_iters: integer, estimated number of iterations based on token, batch size, and epochs.
     :param learning_rate: int or float, Default to 1. the learning rate to clip gradients
     :param learning_rate_decay: int or float, Default to 1. rate at which to decay learning rate.
     :param tokens: a torch data struct of numbers representing a corpus of strings.
@@ -84,7 +86,7 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
     else:
         display_interval = int(num_iters * display_frequency)
 
-    logging.info(f'Updating Statistics every {display_interval} iterations.')
+    # logging.info(f'Updating Statistics every {display_interval} iterations.')
 
     mp.set_start_method('spawn', force=True)
 
@@ -136,7 +138,7 @@ def _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, 
     """
 
     pbar_desc = f'EPOCH: {epoch_counter} - PROC: {rank}' if rank is not None else f'EPOCH: {epoch_counter}'
-    total_iters = num_iters // 2 if num_procs is not None else num_iters
+    total_iters = num_iters // 4 if rank is not None else num_iters // 2
     pbar_leave = False
     pbar_pos = None if rank else 0
     epoch_progress = tqdm(batch_data(tokens=tokens, model=model)
