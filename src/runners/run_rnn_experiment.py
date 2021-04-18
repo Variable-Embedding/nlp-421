@@ -44,7 +44,7 @@ def run_rnn_experiment(epochs=2, enable_mp=True, **nn_data):
     end_time = time.time()
     elapsed_time = end_time-start_time
     display_hrs = elapsed_time / 3600
-    logging.info(f'Finished Training. Elapsed time is {display_hrs} hours.')
+    logging.info(f'Finished Training. Elapsed time with enable_mp={enable_mp} is {display_hrs} hours.')
     logging.info(f'Results {len(results.train_records)}')
 
     return True

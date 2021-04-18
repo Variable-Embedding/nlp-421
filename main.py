@@ -10,7 +10,9 @@ if __name__ == '__main__':
 
     # our custom functions to prep toy dataset and glove embeddings
     nn_data = run_dataprep(embedding_type="glove_common_crawl", corpus_type="WikiText2")
-    result = run_rnn_experiment(**nn_data)
+
+    run_rnn_experiment(**nn_data, enable_mp=False)
+    run_rnn_experiment(**nn_data, enable_mp=True)
 
 
 
