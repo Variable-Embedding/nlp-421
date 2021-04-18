@@ -11,9 +11,9 @@ from tqdm import tqdm
 import torch.multiprocessing as mp
 from collections import defaultdict
 import os
+import time
 
-
-def run_rnn_experiment(epochs=1, enable_mp=True, **nn_data):
+def run_rnn_experiment(epochs=2, enable_mp=True, **nn_data):
     """
     """
     results = Results()
@@ -30,6 +30,7 @@ def run_rnn_experiment(epochs=1, enable_mp=True, **nn_data):
     test_data = nn_data['test']
 
     num_iters = report_model_parameters(model, train_data['tokens'])
+    start_time = time.time()
 
     logging.info(f'Starting Training for {epochs}x Epochs, {model.batch_size}x batches'
                  f', {model.embedding_size} embedding size'
@@ -40,8 +41,10 @@ def run_rnn_experiment(epochs=1, enable_mp=True, **nn_data):
 
     for epoch in total_epochs:
         train_epoch(model=model, curr_epoch=epoch, total_epochs=epochs, tokens=train_data["tokens"], num_iters=num_iters, enable_mp=enable_mp, results=results)
-
-    logging.info('Finished Training')
+    end_time = time.time()
+    elapsed_time = end_time-start_time
+    display_hrs = elapsed_time / 3600
+    logging.info(f'Finished Training. Elapsed time is {display_hrs} hours.')
     logging.info(f'Results {len(results.train_records)}')
 
     return True
@@ -80,7 +83,7 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
 
 def _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank=None, num_procs=None, results=None):
 
-    pbar_desc = f'EPOCH: {epoch_counter} - PROC: {rank}' if rank else f'EPOCH: {epoch_counter}'
+    pbar_desc = f'EPOCH: {epoch_counter} - PROC: {rank}' if rank is not None else f'EPOCH: {epoch_counter}'
     total_iters = (num_iters * total_epochs) // 2 if num_procs is not None else num_iters * total_epochs
     epoch_progress = tqdm(batch_data(tokens=tokens, model=model)
                           , desc=pbar_desc, leave=True, total=total_iters)
