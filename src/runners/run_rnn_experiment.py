@@ -13,9 +13,11 @@ from collections import defaultdict
 import os
 
 
-def run_rnn_experiment(epochs=1, **nn_data):
+def run_rnn_experiment(epochs=1, enable_mp=True, **nn_data):
     """
     """
+    results = Results()
+
     stages = nn_data.keys()
     logging.info(f'Preparing experiment for {stages}.')
 
@@ -29,17 +31,23 @@ def run_rnn_experiment(epochs=1, **nn_data):
 
     num_iters = report_model_parameters(model, train_data['tokens'])
 
-    logging.info('Starting Training')
+    logging.info(f'Starting Training for {epochs}x Epochs, {model.batch_size}x batches'
+                 f', {model.embedding_size} embedding size'
+                 f', and {model.dictionary_size} dictionary size'
+                 f' with Device: {model.device}.')
 
     total_epochs = tqdm(range(epochs), desc="Training Progress", leave=True, position=0)
 
     for epoch in total_epochs:
-        train_epoch(model=model, curr_epoch=epoch, total_epochs=epochs, tokens=train_data["tokens"], num_iters=num_iters)
+        train_epoch(model=model, curr_epoch=epoch, total_epochs=epochs, tokens=train_data["tokens"], num_iters=num_iters, enable_mp=enable_mp, results=results)
+
+    logging.info('Finished Training')
+    logging.info(f'Results {len(results.train_records)}')
 
     return True
 
 
-def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, learning_rate_decay=1, tokens=None, train_dataloader=None, display_frequency=0.02, enable_mp=True):
+def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, learning_rate_decay=1, tokens=None, train_dataloader=None, display_frequency=0.02, enable_mp=True, results=None):
     model.train()
     epoch_counter = curr_epoch+1
     epoch_loss = []
@@ -53,31 +61,27 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
 
     mp.set_start_method('spawn', force=True)
 
-    results = Results()
-
     if enable_mp:
         model.share_memory()
-        num_procs = 2
+        # nun_procs -> how many parallel threads to run
+        num_procs = 2  # alternatively use mp.cpu_count() to use all available threads
         processes = []
         # assign processes
         for rank in range(num_procs):
             p = mp.Process(target=_train_epoch, args=(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank, num_procs,results))
             p.start()
             processes.append(p)
-        for p in processes:
+        for p in tqdm(processes, desc='Joining MP processes.'):
             p.join()
 
     else:
         _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, results)
 
-    logging.info('Finished Training')
-    logging.info(f'Results {len(results.train_records)}')
-
 
 def _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank=None, num_procs=None, results=None):
 
     pbar_desc = f'EPOCH: {epoch_counter} - PROC: {rank}' if rank else f'EPOCH: {epoch_counter}'
-    total_iters = num_iters * total_epochs
+    total_iters = (num_iters * total_epochs) // 2 if num_procs is not None else num_iters * total_epochs
     epoch_progress = tqdm(batch_data(tokens=tokens, model=model)
                           , desc=pbar_desc, leave=True, total=total_iters)
     epoch_loss = []
@@ -188,7 +192,7 @@ def report_model_parameters(model, train_data):
     num_iters += len(train_data) // model.batch_size // model.sequence_length
 
     num_parameters = sum([np.prod(p.size()) for p in model.parameters()])
-    logging.info("Number of model parameters: {}".format(num_parameters))
+    logging.info("Number of model parameters: {} and Total Iterations: {}".format(num_parameters, num_iters))
 
     return num_iters
 
