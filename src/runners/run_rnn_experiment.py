@@ -42,7 +42,7 @@ def run_rnn_experiment(epochs=2, enable_mp=True, device="gpu", **nn_data):
                  f', and {model.dictionary_size} dictionary size'
                  f' with Device: {model.device}. =====')
 
-    total_epochs = tqdm(range(epochs), desc="Training Progress", leave=True, position=0)
+    total_epochs = tqdm(range(epochs), desc="Training Progress", leave=True, position=0, total=epochs)
 
     for epoch in total_epochs:
         train_epoch(model=model, curr_epoch=epoch, total_epochs=epochs, tokens=train_data["tokens"], num_iters=num_iters, enable_mp=enable_mp, results=results)
@@ -135,7 +135,7 @@ def _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, 
     """
 
     pbar_desc = f'EPOCH: {epoch_counter} - PROC: {rank}' if rank is not None else f'EPOCH: {epoch_counter}'
-    total_iters = (num_iters * total_epochs) // 2 if num_procs is not None else num_iters * total_epochs
+    total_iters = num_iters // 2 if num_procs is not None else num_iters
     pbar_leave = False
     pbar_pos = None if rank else 0
     epoch_progress = tqdm(batch_data(tokens=tokens, model=model)
