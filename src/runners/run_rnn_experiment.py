@@ -27,7 +27,7 @@ def run_rnn_experiment(epochs=1, **nn_data):
     valid_data = nn_data['valid']
     test_data = nn_data['test']
 
-    num_iters = report_model_parameters(model, train_data)
+    num_iters = report_model_parameters(model, train_data['tokens'])
 
     logging.info('Starting Training')
 
@@ -55,11 +55,11 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
 
     if enable_mp:
         model.share_memory()
-
+        num_procs = mp.cpu_count() // 2
         processes = []
         # assign processes
-        for rank in range(mp.cpu_count() // 2):
-            p = mp.Process(target=_train_epoch, args=(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank))
+        for rank in range(num_procs):
+            p = mp.Process(target=_train_epoch, args=(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank, num_procs))
             p.start()
             processes.append(p)
         for p in processes:
@@ -72,16 +72,18 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
     logging.info(f'Results {len(Results().train_loss)}')
 
 
-def _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank=None):
+def _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank=None, num_procs=None):
 
     pbar_desc = f'EPOCH: {epoch_counter} - PROC: {rank}' if rank else f'EPOCH: {epoch_counter}'
+    total_iters = num_iters * total_epochs
     epoch_progress = tqdm(batch_data(tokens=tokens, model=model)
-                          , desc=pbar_desc, leave=True, total=num_iters * total_epochs)
+                          , desc=pbar_desc, leave=True, total=total_iters)
     epoch_loss = []
 
     curr_perplexity = 0
-
+    counter = 0
     for idx, (x, y) in enumerate(epoch_progress):
+        counter += 1
 
         pid = os.getpid()
 
@@ -95,8 +97,7 @@ def _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, 
         if idx == 0:
             curr_perplexity = np.exp(batch_loss)
             epoch_progress.set_description(
-                'EPOCH: {} - PROC: {} - Start Perplexity: {:.2f} - Start Loss: {:.2f}'.format(epoch_counter, rank, curr_perplexity,
-                                                                                   batch_loss))
+                'EPOCH: {} - PROC: {} - Start Perplexity: {:.2f} - Start Loss: {:.2f}'.format(epoch_counter, rank, curr_perplexity, batch_loss))
             epoch_progress.refresh()
 
         if idx > 0 and idx % display_interval == 0:
