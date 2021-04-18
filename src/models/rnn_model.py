@@ -14,7 +14,7 @@ class Model(nn.Module):
     :param sequence_length: integer, default to 30. The token sequence length.
     :param max_norm: integer, default to 2. The maximum norm for back propagation.
     :param max_init_param: float, default to 0.01. The maximum weight after initialization.
-    :param device: string, default to "cpu" or "gpu" if detected. The hardware device to train on.
+    :param device: string, default to "gpu" if detected else "cpu. The hardware device for nn training.
     :param sequence_step_size: None, optional. Default to sequence length.
                         The step size for batching (the smaller it is, the more overlap).
     :params lstm_configuration: a string, default to "default". Enable future options to tinker with model.

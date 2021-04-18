@@ -14,7 +14,11 @@ import os
 import time
 
 def run_rnn_experiment(epochs=2, enable_mp=True, **nn_data):
-    """
+    """A function wrapper to execute training.
+    :param epochs: integer, number of iterations to run.
+    :param enable_mp: bool, default to True. whether to enable multiprocessing
+    :param nn_data: a dict of data containing required data elements for nn training.
+    :return: True if function completes. 
     """
     results = Results()
 
@@ -29,7 +33,7 @@ def run_rnn_experiment(epochs=2, enable_mp=True, **nn_data):
     valid_data = nn_data['valid']
     test_data = nn_data['test']
 
-    num_iters = report_model_parameters(model, train_data['tokens'])
+    num_iters = report_model_parameters(model=model, tokens=train_data['tokens'])
     start_time = time.time()
 
     logging.info(f'===== Starting Training for {epochs}x Epochs, {model.batch_size}x batches'
@@ -45,13 +49,30 @@ def run_rnn_experiment(epochs=2, enable_mp=True, **nn_data):
     end_time = time.time()
     elapsed_time = end_time-start_time
     display_hrs = elapsed_time / 3600
-    logging.info(f'===== Finished Training. Elapsed time with enable_mp={enable_mp} is {display_hrs} hours. =====')
-    logging.info(f'Results {len(results.train_records)}')
+    logging.info(f'===== Finished Training. '
+                 f'Elapsed time with enable_mp={enable_mp} is {round(display_hrs, 4)} hours. =====')
+    # FIXME: Configure results class to capture training statistics.
+    # logging.info(f'Results {len(results.train_records)}')
 
     return True
 
 
 def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, learning_rate_decay=1, tokens=None, train_dataloader=None, display_frequency=0.02, enable_mp=True, results=None):
+    """Apply training to a single epoch.
+
+    :param model: The PyTorch model class.
+    :param curr_epoch: integer, the current epoch.
+    :param total_epochs: integer, max number of epochs to train.
+    :param num_iters: integer, estimated number of iterations based on tokens and batch size.
+    :param learning_rate: int or float, Default to 1. the learning rate to clip gradients
+    :param learning_rate_decay: int or float, Default to 1. rate at which to decay learning rate.
+    :param tokens: a torch data struct of numbers representing a corpus of strings.
+    :param train_dataloader: a torch object that returns data set objects. Optional.
+    :param display_frequency: float, the rate at which to display tqdm progress bar. Default to 2% of total expected iterations.
+    :param enable_mp: bool, Default to True to enable multiprocessing during each epoch.
+    :param results: a Results() class to store training results.
+    :return: None.
+    """
     model.train()
     epoch_counter = curr_epoch+1
     epoch_loss = []
@@ -72,21 +93,49 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
         processes = []
         # assign processes
         for rank in range(num_procs):
-            p = mp.Process(target=_train_epoch, args=(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank, num_procs,results))
+            p = mp.Process(target=_train_epoch, args=(model
+                                                      , tokens
+                                                      , epoch_counter
+                                                      , display_interval
+                                                      , learning_rate
+                                                      , learning_rate_decay
+                                                      , curr_epoch
+                                                      , total_epochs
+                                                      , num_iters
+                                                      , rank
+                                                      , num_procs
+                                                      , results)
+                           )
             p.start()
             processes.append(p)
         for p in tqdm(processes, desc='Joining MP processes.'):
             p.join()
 
     else:
-        _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay=learning_rate_decay, curr_epoch=curr_epoch, total_epochs=total_epochs, num_iters=num_iters, results=results)
+        _train_epoch(model
+                     , tokens=tokens
+                     , epoch_counter=epoch_counter
+                     , display_interval=display_interval
+                     , learning_rate=learning_rate
+                     , learning_rate_decay=learning_rate_decay
+                     , curr_epoch=curr_epoch
+                     , total_epochs=total_epochs
+                     , num_iters=num_iters
+                     , results=results
+                     )
 
 
 def _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank=None, num_procs=None, results=None):
+    """Inner function to execute training loops.
+
+    :params: Inherit params from parent function train_epoch()
+
+    :return: None. Execute train loops, report statistics, and update results class.
+    """
 
     pbar_desc = f'EPOCH: {epoch_counter} - PROC: {rank}' if rank is not None else f'EPOCH: {epoch_counter}'
     total_iters = (num_iters * total_epochs) // 2 if num_procs is not None else num_iters * total_epochs
-    pbar_leave = True if rank else False
+    pbar_leave = False
     pbar_pos = None if rank else 0
     epoch_progress = tqdm(batch_data(tokens=tokens, model=model)
                           , desc=pbar_desc, leave=pbar_leave, total=total_iters, position=pbar_pos)
@@ -133,16 +182,16 @@ def _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, 
 def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_step_size=None, shuffle=False):
     """Helper function to batch the data.
 
-    Args:
-        tokens: the data to batch.
-        model: the model to batch for.
-        batch_size: the batch size, if None will use model.batch_size.
-        sequence_step_size: the sequence step size.
-        sequence_length: length of token sequence
-        shuffle: Whether to shuffle the order of sequences.
+    :param tokens: the data to batch.
+    :param model: the model to batch for.
+    :param batch_size: the batch size, if None will use model.batch_size.
+    :param sequence_step_size: the sequence step size.
+    :param sequence_length: length of token sequence
+    :param shuffle: Whether to shuffle the order of sequences.
 
-    Returns:
-        Iterator for batched data.
+    :return: Iterator for batched data.
+
+    primary_reference: https://github.com/iryzhkov/nlp-pipeline
     """
     if batch_size is None:
         batch_size = model.batch_size
@@ -191,10 +240,18 @@ class LanguageModelSequence(Dataset):
         return len(self.data)
 
 
-def report_model_parameters(model, train_data):
+def report_model_parameters(model, tokens):
+    """Report general model statistics such as paramters and number of iterations.
 
-    num_iters = len(train_data) // model.batch_size // model.sequence_step_size
-    num_iters += len(train_data) // model.batch_size // model.sequence_length
+    :param model: The PyTorch model class.
+    :param tokens: a 1D list or array of tokens in the target corpus.
+    :return: integer, number of estimated iterations.
+
+    primary_reference: https://github.com/iryzhkov/nlp-pipeline
+    """
+
+    num_iters = len(tokens) // model.batch_size // model.sequence_step_size
+    num_iters += len(tokens) // model.batch_size // model.sequence_length
 
     num_parameters = sum([np.prod(p.size()) for p in model.parameters()])
     logging.info("Number of model parameters: {} and Total Iterations: {}".format(num_parameters, num_iters))
@@ -205,12 +262,12 @@ def report_model_parameters(model, train_data):
 def loss_function(output, target):
     """Loss function for the model.
 
-    Args:
-        output: the output of the model.
-        target: the expected tokens.
+    :param output: the output of the model.
+    :param target: the expected tokens.
 
-    Returns:
-        Loss.
+    :return: Loss.
+
+    primary_reference: https://github.com/iryzhkov/nlp-pipeline
     """
     return F.cross_entropy(output.reshape(-1, output.size(2)), target.reshape(-1)) * target.size(1)
 
