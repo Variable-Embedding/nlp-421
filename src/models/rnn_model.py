@@ -29,7 +29,7 @@ class Model(nn.Module):
                  , embedding_layer=None
                  , num_layers=2
                  , dropout_probability=.5
-                 , batch_size=128
+                 , batch_size=64
                  , hidden_size=None
                  , sequence_length=16
                  , max_norm=2

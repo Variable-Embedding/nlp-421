@@ -53,26 +53,28 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
 
     mp.set_start_method('spawn', force=True)
 
+    results = Results()
+
     if enable_mp:
         model.share_memory()
-        num_procs = mp.cpu_count() // 2
+        num_procs = 2
         processes = []
         # assign processes
         for rank in range(num_procs):
-            p = mp.Process(target=_train_epoch, args=(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank, num_procs))
+            p = mp.Process(target=_train_epoch, args=(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank, num_procs,results))
             p.start()
             processes.append(p)
         for p in processes:
             p.join()
 
     else:
-        _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters)
+        _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, results)
 
     logging.info('Finished Training')
-    logging.info(f'Results {len(Results().train_loss)}')
+    logging.info(f'Results {len(results.train_records)}')
 
 
-def _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank=None, num_procs=None):
+def _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank=None, num_procs=None, results=None):
 
     pbar_desc = f'EPOCH: {epoch_counter} - PROC: {rank}' if rank else f'EPOCH: {epoch_counter}'
     total_iters = num_iters * total_epochs
@@ -116,7 +118,7 @@ def _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, 
 
         epoch_loss.append(batch_loss)
 
-        Results().result(stage='train', pid=pid, process=rank, iteration=idx, loss=batch_loss, perplexity=curr_perplexity, epoch=curr_epoch)
+        results.append_train_result(stage='train', pid=pid, process=rank, iteration=idx, loss=batch_loss, perplexity=curr_perplexity, epoch=curr_epoch)
 
 
 def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_step_size=None, shuffle=False):
@@ -206,8 +208,8 @@ def loss_function(output, target):
 
 class Results:
     def __init__(self):
-        self.train_loss = []
+        self.train_records = []
 
-    def result(self, stage, pid, process, iteration, loss, perplexity, epoch):
+    def append_train_result(self, stage, pid, process, iteration, loss, perplexity, epoch):
         res = tuple((stage, pid, process, iteration, loss, perplexity, epoch))
-        self.train_loss.append(res)
+        self.train_records.append(res)
