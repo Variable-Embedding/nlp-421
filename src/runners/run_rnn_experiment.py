@@ -8,6 +8,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
+import torch.multiprocessing as mp
+from collections import defaultdict
+import os
 
 
 def run_rnn_experiment(epochs=1, **nn_data):
@@ -20,23 +23,23 @@ def run_rnn_experiment(epochs=1, **nn_data):
     model.to(model.device)
 
     train_data = nn_data['train']
+    # TODO: valid and test integration
     valid_data = nn_data['valid']
     test_data = nn_data['test']
 
     num_iters = report_model_parameters(model, train_data)
 
     logging.info('Starting Training')
-    train_perplexity = []
-    total_epochs = tqdm(range(epochs), desc="Training Progress", leave=True)
+
+    total_epochs = tqdm(range(epochs), desc="Training Progress", leave=True, position=0)
 
     for epoch in total_epochs:
-        epoch_loss = train_epoch(model=model, curr_epoch=epoch, total_epochs=epochs, tokens=train_data["tokens"], num_iters=num_iters)
-        train_perplexity.append(np.exp(np.mean(epoch_loss)))
+        train_epoch(model=model, curr_epoch=epoch, total_epochs=epochs, tokens=train_data["tokens"], num_iters=num_iters)
 
     return True
 
 
-def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, learning_rate_decay=1, tokens=None, train_dataloader=None, display_frequency=0.02):
+def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, learning_rate_decay=1, tokens=None, train_dataloader=None, display_frequency=0.02, enable_mp=True):
     model.train()
     epoch_counter = curr_epoch+1
     epoch_loss = []
@@ -48,10 +51,40 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
 
     logging.info(f'Updating Statistics every {display_interval} iterations.')
 
+    mp.set_start_method('spawn', force=True)
+
+    if enable_mp:
+        model.share_memory()
+
+        processes = []
+        # assign processes
+        for rank in range(mp.cpu_count() // 2):
+            p = mp.Process(target=_train_epoch, args=(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank))
+            p.start()
+            processes.append(p)
+        for p in processes:
+            p.join()
+
+    else:
+        _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters)
+
+    logging.info('Finished Training')
+    logging.info(f'Results {len(Results().train_loss)}')
+
+
+def _train_epoch(model, tokens, epoch_counter, display_interval, learning_rate, learning_rate_decay, curr_epoch, total_epochs, num_iters, rank=None):
+
+    pbar_desc = f'EPOCH: {epoch_counter} - PROC: {rank}' if rank else f'EPOCH: {epoch_counter}'
     epoch_progress = tqdm(batch_data(tokens=tokens, model=model)
-                          , desc=f'EPOCH: {epoch_counter}', position=0, leave=False, total=num_iters * total_epochs)
+                          , desc=pbar_desc, leave=True, total=num_iters * total_epochs)
+    epoch_loss = []
+
+    curr_perplexity = 0
 
     for idx, (x, y) in enumerate(epoch_progress):
+
+        pid = os.getpid()
+
         model.init_hidden()
         model.zero_grad()
         output = model(x)
@@ -61,15 +94,17 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
 
         if idx == 0:
             curr_perplexity = np.exp(batch_loss)
-            epoch_progress.set_description('EPOCH: {} - Start Perplexity: {:.2f} - Start Loss: {:.2f}'.format(epoch_counter, curr_perplexity, batch_loss))
+            epoch_progress.set_description(
+                'EPOCH: {} - PROC: {} - Start Perplexity: {:.2f} - Start Loss: {:.2f}'.format(epoch_counter, rank, curr_perplexity,
+                                                                                   batch_loss))
             epoch_progress.refresh()
 
         if idx > 0 and idx % display_interval == 0:
             curr_perplexity = np.exp(batch_loss)
-            epoch_progress.set_description('EPOCH: {} - Curr  Perplexity: {:.2f} - Loss: {:.2f}'.format(epoch_counter, curr_perplexity, batch_loss))
+            epoch_progress.set_description(
+                'EPOCH: {} - PROC: {} - Curr  Perplexity: {:.2f} - Loss: {:.2f}'.format(epoch_counter, rank, curr_perplexity, batch_loss))
             epoch_progress.refresh()
 
-        epoch_loss.append(batch_loss)
         loss.backward()
 
         with torch.no_grad():
@@ -78,7 +113,9 @@ def train_epoch(model, curr_epoch, total_epochs, num_iters, learning_rate=1, lea
                 lr = learning_rate * (learning_rate_decay ** curr_epoch)
                 param -= lr * param.grad
 
-    return epoch_loss
+        epoch_loss.append(batch_loss)
+
+        Results().result(stage='train', pid=pid, process=rank, iteration=idx, loss=batch_loss, perplexity=curr_perplexity, epoch=curr_epoch)
 
 
 def batch_data(tokens, model, batch_size=None, sequence_length=None, sequence_step_size=None, shuffle=False):
@@ -164,3 +201,12 @@ def loss_function(output, target):
         Loss.
     """
     return F.cross_entropy(output.reshape(-1, output.size(2)), target.reshape(-1)) * target.size(1)
+
+
+class Results:
+    def __init__(self):
+        self.train_loss = []
+
+    def result(self, stage, pid, process, iteration, loss, perplexity, epoch):
+        res = tuple((stage, pid, process, iteration, loss, perplexity, epoch))
+        self.train_loss.append(res)
