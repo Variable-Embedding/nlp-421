@@ -1,5 +1,8 @@
 # nlp-421
 
+## This Project is Archived
+Torchtext implementation applied to [nlp-ft project](https://github.com/Variable-Embedding/nlp-ft).
+
 An exploratory project to get and process GloVe embeddings for use in a NLP neural network. 
 
 ## Usage
